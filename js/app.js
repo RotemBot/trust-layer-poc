@@ -985,7 +985,7 @@ function renderFlowsPage(targetId) {
       </button>
       <button class="flows-tab" onclick="switchFlowsTab('userflows', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        User Flows
+        Flows
         <span class="tab-count">3</span>
       </button>
       <button class="flows-tab" onclick="switchFlowsTab('widgets', this)">
@@ -1883,6 +1883,10 @@ function openNodeMenu(nodeId, event) {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       <span>View Related User Stories</span>
     </div>
+    ${isWidget ? `<div class="node-menu-item" onclick="viewNodeInWidgetLibrary()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>View in Widget Library</span>
+    </div>` : ''}
   `;
 
   const wrapRect = canvasWrap.getBoundingClientRect();
@@ -2025,6 +2029,50 @@ function viewNodeTests() {
       }
     }
   }, 200);
+}
+
+function viewNodeInWidgetLibrary() {
+  const node = findFlowNode(selectedNodeId);
+  closeNodeMenu();
+  if (!node) return;
+
+  // Navigate to the Insights sub-tab (which contains the Widget Library)
+  switchAdvancedSubTab('flows');
+
+  setTimeout(() => {
+    // Find and click the Widget Library tab button
+    const tabBtns = document.querySelectorAll('.flows-tab-menu .flows-tab');
+    const widgetsBtn = Array.from(tabBtns).find(b => b.textContent.includes('Widget Library'));
+    if (widgetsBtn) switchFlowsTab('widgets', widgetsBtn);
+
+    // Try to find and expand the matching widget
+    setTimeout(() => {
+      const matchIdx = findMatchingWidgetIndex(node.label);
+      if (matchIdx >= 0) {
+        expandWidget(matchIdx);
+      }
+    }, 100);
+  }, 100);
+}
+
+function findMatchingWidgetIndex(nodeLabel) {
+  const words = nodeLabel.toLowerCase().split(/\s+/);
+  let bestIdx = -1;
+  let bestScore = 0;
+
+  WIDGETS.forEach((w, idx) => {
+    const wWords = w.name.toLowerCase().split(/\s+/);
+    let score = 0;
+    for (const word of words) {
+      if (wWords.some(ww => ww.includes(word) || word.includes(ww))) score++;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestIdx = idx;
+    }
+  });
+
+  return bestScore > 0 ? bestIdx : -1;
 }
 
 function generateCodeForNode(node) {
@@ -2718,5 +2766,6 @@ window.closeNodeMenu = closeNodeMenu;
 window.viewNodePage = viewNodePage;
 window.viewNodeSource = viewNodeSource;
 window.viewNodeTests = viewNodeTests;
+window.viewNodeInWidgetLibrary = viewNodeInWidgetLibrary;
 window.selectVersionForCompare = selectVersionForCompare;
 window.openCodeDiff = openCodeDiff;
