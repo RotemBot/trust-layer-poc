@@ -7,6 +7,13 @@ const FLOWS = [
     title: 'Browse & Search Tool Catalog',
     desc: 'Users can view the full tool catalog, apply category filters, and search tools by name or description. Results update in real-time with pagination.',
     tags: ['Catalog', 'Search', 'Filters'],
+    story: [
+      { keyword: 'Given', text: 'the user is on the Catalog page' },
+      { keyword: 'When', text: 'they select the "Power Tools" category filter' },
+      { keyword: 'And', text: 'type "drill" into the search bar' },
+      { keyword: 'Then', text: 'only matching tools are displayed in real-time' },
+      { keyword: 'And', text: 'clicking a tool card opens its detail page with availability status' },
+    ],
     steps: [
       { action: 'Navigate to Catalog', detail: 'User opens the Catalog page from the navigation menu', url: 'https://tooldonate.com/catalog' },
       { action: 'Apply Category Filter', detail: 'Clicks "Power Tools" category to filter the catalog list', url: 'https://tooldonate.com/catalog?cat=power-tools' },
@@ -58,6 +65,13 @@ test.describe('Browse & Search Tool Catalog', () => {
     title: 'Submit Tool Loan Request',
     desc: 'Authenticated users can select a tool, choose a pickup date and time, add notes, and submit a loan request. Form validates required fields and date constraints.',
     tags: ['Loan Form', 'Validation', 'Scheduling'],
+    story: [
+      { keyword: 'Given', text: 'an authenticated user is viewing a tool detail page' },
+      { keyword: 'When', text: 'they click "Request to Borrow"' },
+      { keyword: 'And', text: 'select a pickup date and fill in notes' },
+      { keyword: 'Then', text: 'the loan request is submitted successfully' },
+      { keyword: 'And', text: 'a confirmation appears with the request in their dashboard' },
+    ],
     steps: [
       { action: 'Open Tool Detail', detail: 'User navigates to a specific tool page from the catalog', url: 'https://tooldonate.com/catalog/cordless-drill' },
       { action: 'Click "Request to Borrow"', detail: 'Clicks the borrow button, loan request form appears', url: 'https://tooldonate.com/catalog/cordless-drill#borrow' },
@@ -122,6 +136,13 @@ test.describe('Submit Tool Loan Request', () => {
     title: 'User Registration & Login',
     desc: 'New users can sign up with email and password, verify their email, complete their profile, and log in. Includes form validation and duplicate email detection.',
     tags: ['Auth', 'Registration', 'Profile'],
+    story: [
+      { keyword: 'Given', text: 'a new visitor is on the Sign Up page' },
+      { keyword: 'When', text: 'they fill in name, email, and a strong password' },
+      { keyword: 'And', text: 'submit the registration form' },
+      { keyword: 'Then', text: 'a verification email is sent' },
+      { keyword: 'And', text: 'after verifying, they can log in and see their dashboard' },
+    ],
     steps: [
       { action: 'Navigate to Sign Up', detail: 'User clicks "Sign Up" from the homepage navigation', url: 'https://tooldonate.com/signup' },
       { action: 'Fill Registration Form', detail: 'Enters name, email, password, and confirms password', url: 'https://tooldonate.com/signup' },
@@ -191,6 +212,13 @@ test.describe('User Registration & Login', () => {
     title: 'Admin Approve / Reject Loan',
     desc: 'Admin users can review pending loan requests in the dashboard, inspect request details, and approve or reject them with optional notes sent to the requester.',
     tags: ['Admin', 'Dashboard', 'Loans'],
+    story: [
+      { keyword: 'Given', text: 'an admin is logged in and viewing the admin dashboard' },
+      { keyword: 'When', text: 'they open a pending loan request' },
+      { keyword: 'And', text: 'add a note and click "Approve"' },
+      { keyword: 'Then', text: 'the request status changes to "Approved"' },
+      { keyword: 'And', text: 'the requester receives a notification' },
+    ],
     steps: [
       { action: 'Login as Admin', detail: 'Admin user signs in with admin credentials', url: 'https://tooldonate.com/login' },
       { action: 'Open Admin Dashboard', detail: 'Navigates to the admin dashboard with pending requests list', url: 'https://tooldonate.com/admin' },
@@ -257,6 +285,13 @@ test.describe('Admin Approve / Reject Loan', () => {
     title: 'Tool Return Process',
     desc: 'Users can initiate a return for a borrowed tool, confirm the tool condition, schedule a drop-off time, and complete the return. Inventory status updates automatically.',
     tags: ['Returns', 'Inventory', 'Status'],
+    story: [
+      { keyword: 'Given', text: 'a user has an active loan in their dashboard' },
+      { keyword: 'When', text: 'they click "Return" and select the tool condition' },
+      { keyword: 'And', text: 'schedule a drop-off time slot' },
+      { keyword: 'Then', text: 'the return is confirmed and the loan status updates to "Returned"' },
+      { keyword: 'And', text: 'the tool becomes available in the catalog again' },
+    ],
     steps: [
       { action: 'Open My Loans', detail: 'User navigates to their active loans dashboard', url: 'https://tooldonate.com/my-loans' },
       { action: 'Initiate Return', detail: 'Clicks "Return" on an active loan — return form opens', url: 'https://tooldonate.com/my-loans/LN-2024-032/return' },
@@ -321,6 +356,13 @@ test.describe('Tool Return Process', () => {
     title: 'Overdue Item Notification & Tracking',
     desc: 'System automatically detects overdue loans, sends email notifications to borrowers, and surfaces overdue items in the admin dashboard with escalation indicators.',
     tags: ['Notifications', 'Admin', 'Overdue'],
+    story: [
+      { keyword: 'Given', text: 'a loan has passed its due date' },
+      { keyword: 'When', text: 'an admin views the Overdue Items section' },
+      { keyword: 'And', text: 'clicks "Send Reminder" on an overdue item' },
+      { keyword: 'Then', text: 'an email reminder is sent to the borrower' },
+      { keyword: 'And', text: 'the overdue status updates to "Reminder Sent"' },
+    ],
     steps: [
       { action: 'Open Admin Dashboard', detail: 'Admin logs in and opens the main admin dashboard', url: 'https://tooldonate.com/admin' },
       { action: 'View Overdue Section', detail: 'Scrolls to the "Overdue Items" section showing flagged loans', url: 'https://tooldonate.com/admin#overdue' },
@@ -509,17 +551,25 @@ const WIDGETS = [
     category: 'Layout',
     icon: '🎯',
     description: 'Full-width hero section with headline, sub-text, CTA buttons and a decorative image area. Supports customizable badge text.',
-    props: ['title', 'subtitle', 'badge', 'primaryCta', 'secondaryCta'],
-    preview: `
-      <div style="background:linear-gradient(135deg,#0a0a15 60%,#1a1030);padding:32px;border-radius:12px;color:#fff;font-family:system-ui">
-        <div style="font-size:9px;letter-spacing:2px;color:#f97316;margin-bottom:12px;font-weight:700">SYSTEM ONLINE V2.0</div>
-        <div style="font-size:22px;font-weight:900;line-height:1.15;margin-bottom:10px">SHARE <span style="color:#f97316">TOOLS</span>.<br>BUILD <span style="color:#f97316">FUTURE</span>.</div>
-        <div style="font-size:11px;color:#999;margin-bottom:16px;max-width:280px">Access professional-grade equipment without the overhead.</div>
+    props: [
+      { name: 'badge', type: 'text', default: 'SYSTEM ONLINE V2.0' },
+      { name: 'title', type: 'text', default: 'SHARE TOOLS. BUILD FUTURE.' },
+      { name: 'subtitle', type: 'text', default: 'Access professional-grade equipment without the overhead.' },
+      { name: 'primaryCta', type: 'text', default: 'BROWSE CATALOG' },
+      { name: 'secondaryCta', type: 'text', default: 'ADMIN ACCESS' },
+      { name: 'accentColor', type: 'color', default: '#f97316' },
+    ],
+    render(p) {
+      return `<div style="background:linear-gradient(135deg,#0a0a15 60%,#1a1030);padding:32px;border-radius:12px;color:#fff;font-family:system-ui">
+        <div style="font-size:9px;letter-spacing:2px;color:${p.accentColor};margin-bottom:12px;font-weight:700">${p.badge}</div>
+        <div style="font-size:22px;font-weight:900;line-height:1.15;margin-bottom:10px">${p.title.replace(/\.\s*/,'.<br>')}</div>
+        <div style="font-size:11px;color:#999;margin-bottom:16px;max-width:280px">${p.subtitle}</div>
         <div style="display:flex;gap:8px">
-          <button style="background:#f97316;color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">BROWSE CATALOG →</button>
-          <button style="background:transparent;color:#fff;border:1px solid #333;padding:8px 16px;border-radius:6px;font-size:11px;cursor:pointer">🔧 ADMIN ACCESS</button>
+          <button style="background:${p.accentColor};color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${p.primaryCta} →</button>
+          <button style="background:transparent;color:#fff;border:1px solid #333;padding:8px 16px;border-radius:6px;font-size:11px;cursor:pointer">${p.secondaryCta}</button>
         </div>
-      </div>`
+      </div>`;
+    }
   },
   {
     id: 'navigation',
@@ -527,17 +577,22 @@ const WIDGETS = [
     category: 'Layout',
     icon: '🧭',
     description: 'Responsive top navigation with logo, page links and a sign-in button. Sticky positioning with backdrop blur.',
-    props: ['logo', 'links', 'ctaLabel'],
-    preview: `
-      <div style="background:#0a0a15;padding:14px 20px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-family:system-ui">
-        <div style="display:flex;align-items:center;gap:8px;font-weight:700;color:#fff;font-size:14px">🔧 ToolShare</div>
+    props: [
+      { name: 'logo', type: 'text', default: 'ToolShare' },
+      { name: 'ctaLabel', type: 'text', default: 'Sign In' },
+      { name: 'ctaColor', type: 'color', default: '#7c3aed' },
+    ],
+    render(p) {
+      return `<div style="background:#0a0a15;padding:14px 20px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-family:system-ui">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;color:#fff;font-size:14px">🔧 ${p.logo}</div>
         <div style="display:flex;gap:16px;align-items:center">
-          <a style="color:#fff;font-size:12px;text-decoration:none;cursor:pointer">Home</a>
-          <a style="color:#888;font-size:12px;text-decoration:none;cursor:pointer">Catalog</a>
-          <a style="color:#888;font-size:12px;text-decoration:none;cursor:pointer">Admin</a>
-          <button style="background:#7c3aed;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">Sign In</button>
+          <a style="color:#fff;font-size:12px;text-decoration:none">Home</a>
+          <a style="color:#888;font-size:12px;text-decoration:none">Catalog</a>
+          <a style="color:#888;font-size:12px;text-decoration:none">Admin</a>
+          <button style="background:${p.ctaColor};color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">${p.ctaLabel}</button>
         </div>
-      </div>`
+      </div>`;
+    }
   },
   {
     id: 'tool-card',
@@ -545,19 +600,25 @@ const WIDGETS = [
     category: 'Components',
     icon: '🃏',
     description: 'Catalog item card with image placeholder, status badge, name, category tag and description. Supports Available, On Loan, High Risk and Maintenance states.',
-    props: ['image', 'name', 'category', 'description', 'status'],
-    preview: `
-      <div style="background:#12121e;border-radius:12px;overflow:hidden;width:220px;font-family:system-ui;border:1px solid #1e1e33">
-        <div style="background:#1a1a2e;height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative">
-          🔩
-          <span style="position:absolute;top:8px;right:8px;background:#22c55e;color:#000;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px">Available</span>
+    props: [
+      { name: 'name', type: 'text', default: 'Cordless Drill' },
+      { name: 'category', type: 'text', default: 'POWER TOOLS' },
+      { name: 'description', type: 'text', default: '20V MAX cordless drill driver with brushless motor.' },
+      { name: 'status', type: 'select', default: 'Available', options: ['Available', 'On Loan', 'High Risk', 'Maintenance'] },
+    ],
+    render(p) {
+      const colors = { 'Available':'#22c55e', 'On Loan':'#f59e0b', 'High Risk':'#ef4444', 'Maintenance':'#6b7280' };
+      return `<div style="background:#12121e;border-radius:12px;overflow:hidden;width:220px;font-family:system-ui;border:1px solid #1e1e33">
+        <div style="background:#1a1a2e;height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative">🔩
+          <span style="position:absolute;top:8px;right:8px;background:${colors[p.status]||'#22c55e'};color:#000;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px">${p.status}</span>
         </div>
         <div style="padding:14px">
-          <div style="font-weight:700;color:#fff;font-size:13px;margin-bottom:4px">Cordless Drill</div>
-          <span style="font-size:9px;font-weight:700;color:#f97316;letter-spacing:1px">POWER TOOLS</span>
-          <div style="font-size:11px;color:#888;margin-top:6px;line-height:1.4">20V MAX cordless drill driver with brushless motor.</div>
+          <div style="font-weight:700;color:#fff;font-size:13px;margin-bottom:4px">${p.name}</div>
+          <span style="font-size:9px;font-weight:700;color:#f97316;letter-spacing:1px">${p.category}</span>
+          <div style="font-size:11px;color:#888;margin-top:6px;line-height:1.4">${p.description}</div>
         </div>
-      </div>`
+      </div>`;
+    }
   },
   {
     id: 'search-filter',
@@ -565,17 +626,19 @@ const WIDGETS = [
     category: 'Components',
     icon: '🔍',
     description: 'Combined search input with category filter dropdown. Real-time search with icon prefix and responsive layout.',
-    props: ['placeholder', 'categories', 'selectedCategory'],
-    preview: `
-      <div style="display:flex;gap:10px;padding:16px;background:#0f0f1a;border-radius:10px;font-family:system-ui">
+    props: [
+      { name: 'placeholder', type: 'text', default: 'Search tools...' },
+      { name: 'filterLabel', type: 'text', default: 'All Categories' },
+    ],
+    render(p) {
+      return `<div style="display:flex;gap:10px;padding:16px;background:#0f0f1a;border-radius:10px;font-family:system-ui">
         <div style="flex:1;display:flex;align-items:center;gap:8px;background:#1a1a2e;border:1px solid #2a2a40;border-radius:8px;padding:10px 14px">
           <span style="color:#666">🔍</span>
-          <span style="color:#555;font-size:13px">Search tools...</span>
+          <span style="color:#555;font-size:13px">${p.placeholder}</span>
         </div>
-        <button style="background:#1a1a2e;color:#ccc;border:1px solid #2a2a40;padding:10px 16px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
-          ☰ All Categories
-        </button>
-      </div>`
+        <button style="background:#1a1a2e;color:#ccc;border:1px solid #2a2a40;padding:10px 16px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">☰ ${p.filterLabel}</button>
+      </div>`;
+    }
   },
   {
     id: 'stats-counter',
@@ -583,22 +646,21 @@ const WIDGETS = [
     category: 'Components',
     icon: '📊',
     description: 'Animated statistics display card with large number, label and descriptive sub-text. Features subtle gear decoration.',
-    props: ['value', 'label', 'subtext'],
-    preview: `
-      <div style="display:flex;gap:12px;font-family:system-ui">
+    props: [
+      { name: 'value', type: 'text', default: '150+' },
+      { name: 'label', type: 'text', default: 'Tools' },
+      { name: 'subtext', type: 'text', default: 'PROFESSIONAL GRADE' },
+    ],
+    render(p) {
+      return `<div style="display:flex;gap:12px;font-family:system-ui">
         <div style="background:#12121e;border:1px solid #1e1e33;border-radius:12px;padding:20px;text-align:center;flex:1">
           <div style="font-size:10px;color:#444;margin-bottom:4px">⚙</div>
-          <div style="font-size:28px;font-weight:900;color:#fff">150+</div>
-          <div style="font-size:12px;color:#ccc;margin-top:2px">Tools</div>
-          <div style="font-size:9px;color:#555;letter-spacing:1px;margin-top:4px">PROFESSIONAL GRADE</div>
+          <div style="font-size:28px;font-weight:900;color:#fff">${p.value}</div>
+          <div style="font-size:12px;color:#ccc;margin-top:2px">${p.label}</div>
+          <div style="font-size:9px;color:#555;letter-spacing:1px;margin-top:4px">${p.subtext}</div>
         </div>
-        <div style="background:#12121e;border:1px solid #1e1e33;border-radius:12px;padding:20px;text-align:center;flex:1">
-          <div style="font-size:10px;color:#444;margin-bottom:4px">⚙</div>
-          <div style="font-size:28px;font-weight:900;color:#fff">98%</div>
-          <div style="font-size:12px;color:#ccc;margin-top:2px">Available</div>
-          <div style="font-size:9px;color:#555;letter-spacing:1px;margin-top:4px">READY FOR PICKUP</div>
-        </div>
-      </div>`
+      </div>`;
+    }
   },
   {
     id: 'workflow-steps',
@@ -606,25 +668,25 @@ const WIDGETS = [
     category: 'Layout',
     icon: '📋',
     description: 'Numbered step-by-step workflow display with icons, titles and descriptions. Used to explain the tool borrowing process.',
-    props: ['steps[]', 'step.number', 'step.icon', 'step.title', 'step.description'],
-    preview: `
-      <div style="background:#0f0f1a;padding:20px;border-radius:12px;font-family:system-ui;display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;align-items:center;gap:12px;background:#12121e;padding:14px;border-radius:10px;border:1px solid #1e1e33">
-          <div style="color:#f97316;font-weight:900;font-size:16px;min-width:24px">01</div>
-          <div style="font-size:20px">🔍</div>
-          <div><div style="color:#fff;font-size:12px;font-weight:700">Browse Tools</div><div style="color:#888;font-size:10px;margin-top:2px">Explore our extensive catalog</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;background:#12121e;padding:14px;border-radius:10px;border:1px solid #1e1e33">
-          <div style="color:#f97316;font-weight:900;font-size:16px;min-width:24px">02</div>
-          <div style="font-size:20px">📅</div>
-          <div><div style="color:#fff;font-size:12px;font-weight:700">Easy Booking</div><div style="color:#888;font-size:10px;margin-top:2px">Reserve with our simple system</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;background:#12121e;padding:14px;border-radius:10px;border:1px solid #1e1e33">
-          <div style="color:#f97316;font-weight:900;font-size:16px;min-width:24px">03</div>
-          <div style="font-size:20px">🛡️</div>
-          <div><div style="color:#fff;font-size:12px;font-weight:700">Safety First</div><div style="color:#888;font-size:10px;margin-top:2px">Automatic safety restrictions</div></div>
-        </div>
-      </div>`
+    props: [
+      { name: 'step1Title', type: 'text', default: 'Browse Tools' },
+      { name: 'step2Title', type: 'text', default: 'Easy Booking' },
+      { name: 'step3Title', type: 'text', default: 'Safety First' },
+    ],
+    render(p) {
+      const steps = [
+        { num: '01', icon: '🔍', title: p.step1Title, desc: 'Explore our extensive catalog' },
+        { num: '02', icon: '📅', title: p.step2Title, desc: 'Reserve with our simple system' },
+        { num: '03', icon: '🛡️', title: p.step3Title, desc: 'Automatic safety restrictions' },
+      ];
+      return `<div style="background:#0f0f1a;padding:20px;border-radius:12px;font-family:system-ui;display:flex;flex-direction:column;gap:14px">
+        ${steps.map(s => `<div style="display:flex;align-items:center;gap:12px;background:#12121e;padding:14px;border-radius:10px;border:1px solid #1e1e33">
+          <div style="color:#f97316;font-weight:900;font-size:16px;min-width:24px">${s.num}</div>
+          <div style="font-size:20px">${s.icon}</div>
+          <div><div style="color:#fff;font-size:12px;font-weight:700">${s.title}</div><div style="color:#888;font-size:10px;margin-top:2px">${s.desc}</div></div>
+        </div>`).join('')}
+      </div>`;
+    }
   },
   {
     id: 'marquee',
@@ -632,16 +694,19 @@ const WIDGETS = [
     category: 'Layout',
     icon: '📰',
     description: 'Infinite-scrolling horizontal ticker with decorative items. CSS-only animation with configurable speed.',
-    props: ['items[]', 'speed'],
-    preview: `
-      <div style="background:#0a0a15;padding:14px 0;border-radius:10px;overflow:hidden;font-family:system-ui;position:relative">
-        <div style="display:flex;gap:24px;animation:none;white-space:nowrap;padding:0 16px">
-          <span style="color:#888;font-size:11px;font-weight:600">✦ HIGH PRECISION TOOLS <span style="color:#333">●</span></span>
-          <span style="color:#888;font-size:11px;font-weight:600">✦ COMMUNITY DRIVEN <span style="color:#333">●</span></span>
-          <span style="color:#888;font-size:11px;font-weight:600">✦ SMART INVENTORY <span style="color:#333">●</span></span>
-          <span style="color:#888;font-size:11px;font-weight:600">✦ HIGH PRECISION TOOLS <span style="color:#333">●</span></span>
+    props: [
+      { name: 'item1', type: 'text', default: 'HIGH PRECISION TOOLS' },
+      { name: 'item2', type: 'text', default: 'COMMUNITY DRIVEN' },
+      { name: 'item3', type: 'text', default: 'SMART INVENTORY' },
+    ],
+    render(p) {
+      const items = [p.item1, p.item2, p.item3];
+      return `<div style="background:#0a0a15;padding:14px 0;border-radius:10px;overflow:hidden;font-family:system-ui">
+        <div style="display:flex;gap:24px;white-space:nowrap;padding:0 16px">
+          ${items.map(i => `<span style="color:#888;font-size:11px;font-weight:600">✦ ${i} <span style="color:#333">●</span></span>`).join('')}
         </div>
-      </div>`
+      </div>`;
+    }
   },
   {
     id: 'cta-section',
@@ -649,17 +714,24 @@ const WIDGETS = [
     category: 'Layout',
     icon: '📢',
     description: 'Call-to-action section with badge, headline, description and dual action buttons. Centered layout with gradient background.',
-    props: ['badge', 'headline', 'description', 'primaryCta', 'secondaryCta'],
-    preview: `
-      <div style="background:linear-gradient(135deg,#0f0f1a,#1a1030);padding:32px;border-radius:12px;text-align:center;font-family:system-ui">
-        <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;font-weight:700;margin-bottom:10px">SYSTEM READY</div>
-        <div style="font-size:18px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:10px">INITIALIZE YOUR<br>PROJECT</div>
-        <div style="font-size:11px;color:#888;margin-bottom:16px;max-width:300px;margin-left:auto;margin-right:auto">Join the collective. Access professional tools.</div>
+    props: [
+      { name: 'badge', type: 'text', default: 'SYSTEM READY' },
+      { name: 'headline', type: 'text', default: 'INITIALIZE YOUR PROJECT' },
+      { name: 'description', type: 'text', default: 'Join the collective. Access professional tools.' },
+      { name: 'primaryCta', type: 'text', default: 'BROWSE CATALOG' },
+      { name: 'secondaryCta', type: 'text', default: 'AUTHENTICATE' },
+    ],
+    render(p) {
+      return `<div style="background:linear-gradient(135deg,#0f0f1a,#1a1030);padding:32px;border-radius:12px;text-align:center;font-family:system-ui">
+        <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;font-weight:700;margin-bottom:10px">${p.badge}</div>
+        <div style="font-size:18px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:10px">${p.headline}</div>
+        <div style="font-size:11px;color:#888;margin-bottom:16px;max-width:300px;margin-left:auto;margin-right:auto">${p.description}</div>
         <div style="display:flex;gap:8px;justify-content:center">
-          <button style="background:#f97316;color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">BROWSE CATALOG</button>
-          <button style="background:#1a1a1a;color:#fff;border:1px solid #333;padding:8px 16px;border-radius:6px;font-size:11px;cursor:pointer">AUTHENTICATE</button>
+          <button style="background:#f97316;color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${p.primaryCta}</button>
+          <button style="background:#1a1a1a;color:#fff;border:1px solid #333;padding:8px 16px;border-radius:6px;font-size:11px;cursor:pointer">${p.secondaryCta}</button>
         </div>
-      </div>`
+      </div>`;
+    }
   },
   {
     id: 'footer',
@@ -667,18 +739,23 @@ const WIDGETS = [
     category: 'Layout',
     icon: '🏷️',
     description: 'Multi-column footer with brand section, link columns, contact info and copyright bar. Responsive grid layout.',
-    props: ['brand', 'columns[]', 'copyright'],
-    preview: `
-      <div style="background:#080810;padding:24px;border-radius:12px;font-family:system-ui;border:1px solid #1e1e33">
+    props: [
+      { name: 'brand', type: 'text', default: 'ToolShare' },
+      { name: 'tagline', type: 'text', default: 'Building community through shared resources.' },
+      { name: 'copyright', type: 'text', default: '2026 ToolShare' },
+    ],
+    render(p) {
+      return `<div style="background:#080810;padding:24px;border-radius:12px;font-family:system-ui;border:1px solid #1e1e33">
         <div style="display:flex;gap:24px;margin-bottom:16px">
-          <div style="flex:1.5"><div style="color:#fff;font-weight:700;font-size:13px;margin-bottom:6px">🔧 ToolShare</div><div style="color:#666;font-size:10px;line-height:1.4">Building community through shared resources.</div></div>
+          <div style="flex:1.5"><div style="color:#fff;font-weight:700;font-size:13px;margin-bottom:6px">🔧 ${p.brand}</div><div style="color:#666;font-size:10px;line-height:1.4">${p.tagline}</div></div>
           <div style="flex:1"><div style="color:#888;font-size:10px;font-weight:700;margin-bottom:6px">Quick Links</div><div style="color:#555;font-size:10px;line-height:1.8">Browse Catalog<br>My Dashboard<br>My Profile</div></div>
           <div style="flex:1"><div style="color:#888;font-size:10px;font-weight:700;margin-bottom:6px">Contact</div><div style="color:#555;font-size:10px;line-height:1.8">✉ hello@toolshare.com<br>📞 (555) 123-4567</div></div>
         </div>
         <div style="border-top:1px solid #1e1e33;padding-top:10px;display:flex;justify-content:space-between;color:#444;font-size:9px">
-          <span>© 2026 ToolShare</span><span>Privacy · Terms</span>
+          <span>© ${p.copyright}</span><span>Privacy · Terms</span>
         </div>
-      </div>`
+      </div>`;
+    }
   },
   {
     id: 'booking-modal',
@@ -686,25 +763,31 @@ const WIDGETS = [
     category: 'Components',
     icon: '📅',
     description: 'Date picker modal for scheduling tool pickup. Features calendar view, time slots and confirmation button.',
-    props: ['toolName', 'availableDates', 'timeSlots'],
-    preview: `
-      <div style="background:#12121e;border-radius:12px;padding:24px;font-family:system-ui;border:1px solid #2a2a40;max-width:280px">
+    props: [
+      { name: 'toolName', type: 'text', default: 'Cordless Drill' },
+      { name: 'status', type: 'text', default: 'Available' },
+      { name: 'confirmLabel', type: 'text', default: 'Confirm Booking' },
+      { name: 'accentColor', type: 'color', default: '#7c3aed' },
+    ],
+    render(p) {
+      return `<div style="background:#12121e;border-radius:12px;padding:24px;font-family:system-ui;border:1px solid #2a2a40;max-width:280px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <div style="font-weight:700;color:#fff;font-size:14px">📅 Book Tool</div>
           <span style="color:#666;cursor:pointer;font-size:16px">✕</span>
         </div>
-        <div style="color:#888;font-size:11px;margin-bottom:12px">Cordless Drill · Available</div>
+        <div style="color:#888;font-size:11px;margin-bottom:12px">${p.toolName} · ${p.status}</div>
         <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;text-align:center">
           <div style="color:#555;font-size:9px;font-weight:700">Mo</div><div style="color:#555;font-size:9px;font-weight:700">Tu</div><div style="color:#555;font-size:9px;font-weight:700">We</div><div style="color:#555;font-size:9px;font-weight:700">Th</div><div style="color:#555;font-size:9px;font-weight:700">Fr</div><div style="color:#555;font-size:9px;font-weight:700">Sa</div><div style="color:#555;font-size:9px;font-weight:700">Su</div>
-          <div style="color:#444;font-size:10px;padding:4px">1</div><div style="color:#444;font-size:10px;padding:4px">2</div><div style="color:#fff;font-size:10px;padding:4px;background:#7c3aed;border-radius:4px">3</div><div style="color:#ccc;font-size:10px;padding:4px">4</div><div style="color:#ccc;font-size:10px;padding:4px">5</div><div style="color:#444;font-size:10px;padding:4px">6</div><div style="color:#444;font-size:10px;padding:4px">7</div>
+          <div style="color:#444;font-size:10px;padding:4px">1</div><div style="color:#444;font-size:10px;padding:4px">2</div><div style="color:#fff;font-size:10px;padding:4px;background:${p.accentColor};border-radius:4px">3</div><div style="color:#ccc;font-size:10px;padding:4px">4</div><div style="color:#ccc;font-size:10px;padding:4px">5</div><div style="color:#444;font-size:10px;padding:4px">6</div><div style="color:#444;font-size:10px;padding:4px">7</div>
         </div>
         <div style="display:flex;gap:6px;margin-bottom:14px">
-          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#1e1e33;color:#ccc;cursor:pointer">9:00 AM</span>
-          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#7c3aed;color:#fff">11:00 AM</span>
-          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#1e1e33;color:#ccc;cursor:pointer">2:00 PM</span>
+          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#1e1e33;color:#ccc">9:00 AM</span>
+          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:${p.accentColor};color:#fff">11:00 AM</span>
+          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#1e1e33;color:#ccc">2:00 PM</span>
         </div>
-        <button style="width:100%;background:#7c3aed;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Confirm Booking</button>
-      </div>`
+        <button style="width:100%;background:${p.accentColor};color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">${p.confirmLabel}</button>
+      </div>`;
+    }
   }
 ];
 
@@ -848,171 +931,6 @@ function selectPage(page) {
     siteCatalog.classList.remove('active');
     if (page === 'Home') preview.scrollTop = 0;
   }
-}
-
-// ─── RENDER FLOWS PAGE ───
-function renderFlowsPage(targetId) {
-  const container = document.getElementById(targetId || 'flowsPage');
-  const totalPassed = flowStates.filter(s => s.result === 'passed').length;
-  const totalFailed = flowStates.filter(s => s.result === 'failed').length;
-  const totalNotRun = flowStates.filter(s => s.status === 'idle').length;
-
-  let html = `
-    <div class="flows-header fade-in">
-      <div>
-        <div class="flows-title">Product Flows</div>
-        <div class="flows-subtitle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          Auto-detected from your prompt and code architecture
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab Menu -->
-    <div class="flows-tab-menu fade-in">
-      <button class="flows-tab active" onclick="switchFlowsTab('testcases', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Test Cases
-        <span class="tab-count">${FLOWS.length}</span>
-      </button>
-      <button class="flows-tab" onclick="switchFlowsTab('userflows', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
-        User Flows
-        <span class="tab-count">3</span>
-      </button>
-      <button class="flows-tab" onclick="switchFlowsTab('widgets', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Widget Library
-        <span class="tab-count">${WIDGETS.length}</span>
-      </button>
-    </div>
-
-    <!-- Test Cases Tab -->
-    <div class="flows-tab-content active" id="tab-testcases">
-      <div class="flows-stats fade-in" id="flowStats" style="display:flex;gap:16px;margin-bottom:24px">
-        <div class="stat-card"><div class="stat-value">${FLOWS.length}</div><div class="stat-label">Total Flows</div></div>
-        <div class="stat-card passed"><div class="stat-value" id="statPassed">${totalPassed}</div><div class="stat-label">Passed</div></div>
-        <div class="stat-card failed"><div class="stat-value" id="statFailed">${totalFailed}</div><div class="stat-label">Failed</div></div>
-        <div class="stat-card"><div class="stat-value" id="statPending">${totalNotRun}</div><div class="stat-label">Not Run</div></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-        <button class="btn-run-all" onclick="runAllFlows()">
-          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-          Run All
-        </button>
-      </div>
-  `;
-
-  FLOWS.forEach((flow, idx) => {
-    const st = flowStates[idx];
-    html += buildFlowCardHTML(flow, idx, st);
-  });
-
-  html += `</div><!-- /tab-testcases -->`;
-
-  // User Flows Tab
-  html += buildUserFlowsTab();
-
-  // Widget Library Tab
-  html += buildWidgetLibraryTab();
-
-  container.innerHTML = html;
-}
-
-// ─── USER FLOWS TAB ───
-function buildUserFlowsTab() {
-  return `
-    <div class="flows-tab-content" id="tab-userflows">
-      <div class="uf-intro">
-        <strong>Interactive Site Map</strong> — auto-generated from your code architecture. Click any page node to drill down into its components and CTAs. Drag to pan, scroll to zoom.
-      </div>
-
-      <div class="flow-canvas-wrap" id="flowCanvasWrap">
-        <div class="canvas-grid"></div>
-        <svg class="flow-svg" id="flowSvg">
-          <defs>
-            <marker id="arrowM" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" class="arrow-head"/>
-            </marker>
-          </defs>
-        </svg>
-        <div class="flow-canvas" id="flowCanvas">
-          <!-- Nodes are rendered by JS -->
-        </div>
-        <div class="canvas-controls">
-          <button class="canvas-ctrl" onclick="canvasZoom(-.15)" title="Zoom out">−</button>
-          <div class="canvas-zoom-label" id="canvasZoomLabel">100%</div>
-          <button class="canvas-ctrl" onclick="canvasZoom(.15)" title="Zoom in">+</button>
-          <button class="canvas-ctrl" onclick="canvasReset()" title="Reset view">⌂</button>
-        </div>
-      </div>
-    </div><!-- /tab-userflows -->
-  `;
-}
-
-// ─── WIDGET LIBRARY TAB ───
-function buildWidgetLibraryTab() {
-  const categories = [...new Set(WIDGETS.map(w => w.category))];
-  let html = `
-    <div class="flows-tab-content" id="tab-widgets">
-      <div class="widget-lib-intro">
-        <strong>Component Library</strong> — all UI widgets detected in your generated site. Click any widget to inspect its props and interact with a live preview.
-      </div>
-
-      <div class="widget-categories">
-        <button class="widget-cat-btn active" onclick="filterWidgets('all', this)">All <span class="tab-count">${WIDGETS.length}</span></button>
-        ${categories.map(cat => {
-          const count = WIDGETS.filter(w => w.category === cat).length;
-          return `<button class="widget-cat-btn" onclick="filterWidgets('${cat}', this)">${cat} <span class="tab-count">${count}</span></button>`;
-        }).join('')}
-      </div>
-
-      <div class="widget-grid" id="widgetGrid">
-  `;
-
-  WIDGETS.forEach((widget, idx) => {
-    html += `
-        <div class="widget-card fade-in" data-category="${widget.category}" id="widgetCard${idx}" onclick="expandWidget(${idx})">
-          <div class="widget-card-preview">
-            ${widget.preview}
-          </div>
-          <div class="widget-card-info">
-            <span class="widget-icon">${widget.icon}</span>
-            <div class="widget-card-meta">
-              <div class="widget-card-name">${widget.name}</div>
-              <span class="widget-card-cat">${widget.category}</span>
-            </div>
-          </div>
-        </div>
-    `;
-  });
-
-  html += `
-      </div><!-- /widget-grid -->
-
-      <!-- Expanded widget detail (hidden by default) -->
-      <div class="widget-detail" id="widgetDetail" style="display:none">
-        <button class="widget-detail-back" onclick="closeWidgetDetail()">← Back to Library</button>
-        <div class="widget-detail-header">
-          <span class="widget-detail-icon" id="wdIcon"></span>
-          <div>
-            <h3 class="widget-detail-name" id="wdName"></h3>
-            <span class="widget-detail-cat" id="wdCat"></span>
-          </div>
-        </div>
-        <p class="widget-detail-desc" id="wdDesc"></p>
-        <div class="widget-detail-section">
-          <h4>Props</h4>
-          <div class="widget-detail-props" id="wdProps"></div>
-        </div>
-        <div class="widget-detail-section">
-          <h4>Live Preview</h4>
-          <div class="widget-detail-preview" id="wdPreview"></div>
-        </div>
-      </div>
-    </div><!-- /tab-widgets -->
-  `;
-  return html;
 }
 
 /* ─── CANVAS FLOW DATA ─── */

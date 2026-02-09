@@ -162,6 +162,11 @@ function buildFlowCardHTML(flow, idx, st) {
   const runLabel = st.status === 'running' ? '⟳ Running...' : '▶ Run';
   const runClass = st.status === 'running' ? 'run running' : 'run';
 
+  const storyHtml = flow.story ? `
+      <div class="story-block">
+        ${flow.story.map(s => `<div class="story-step"><span class="story-keyword story-kw-${s.keyword.toLowerCase()}">${s.keyword}</span> ${s.text}</div>`).join('')}
+      </div>` : `<div class="flow-desc">${flow.desc}</div>`;
+
   return `
     <div class="flow-card fade-in" id="flowCard${idx}">
       <div class="flow-card-top">
@@ -170,7 +175,7 @@ function buildFlowCardHTML(flow, idx, st) {
         <span class="flow-duration">${durationText}</span>
         ${resultBadge}
       </div>
-      <div class="flow-desc">${flow.desc}</div>
+      ${storyHtml}
       <div class="flow-tags">
         ${flow.tags.map(t => `<span class="flow-tag">${t}</span>`).join('')}
       </div>
@@ -185,7 +190,7 @@ function buildFlowCardHTML(flow, idx, st) {
         </button>
         <button class="flow-action-btn code" onclick="openCode(${idx})">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          View Source Code
+          View Test Code
         </button>
       </div>
     </div>
@@ -512,10 +517,10 @@ function switchAdvancedSubTab(subTab, e) {
   if (e && e.target) {
     e.target.closest('.adv-tab').classList.add('active');
   } else {
-    // Programmatic call — find button by content
-    document.querySelectorAll('.adv-tab').forEach(t => {
-      if (t.textContent.trim().toLowerCase().startsWith(subTab)) t.classList.add('active');
-    });
+    // Programmatic call — first tab is flows/insights, second is code
+    const tabs = document.querySelectorAll('.adv-tab');
+    const targetIdx = subTab === 'flows' ? 0 : 1;
+    if (tabs[targetIdx]) tabs[targetIdx].classList.add('active');
   }
 
   const flowsPage = document.getElementById('flowsPage');
@@ -524,12 +529,194 @@ function switchAdvancedSubTab(subTab, e) {
   if (subTab === 'flows') {
     flowsPage.classList.add('active');
     codeView.classList.remove('active');
-    if (!flowsPage.innerHTML) renderFlowsPage('flowsPage');
+    if (!flowsPage._rendered) {
+      renderFlowsPage('flowsPage');
+      flowsPage._rendered = true;
+    }
   } else {
     flowsPage.classList.remove('active');
     codeView.classList.add('active');
-    if (!document.getElementById('codeEditArea').innerHTML) renderCodeContent();
+    const codeArea = document.getElementById('codeEditArea');
+    if (codeArea && !codeArea._rendered) {
+      renderCodeContent();
+      codeArea._rendered = true;
+    }
   }
+}
+
+// ─── RENDER FLOWS PAGE ───
+function renderFlowsPage(targetId) {
+  const container = document.getElementById(targetId || 'flowsPage');
+  const totalPassed = flowStates.filter(s => s.result === 'passed').length;
+  const totalFailed = flowStates.filter(s => s.result === 'failed').length;
+  const totalNotRun = flowStates.filter(s => s.status === 'idle').length;
+
+  let html = `
+    <div class="flows-header fade-in">
+      <div>
+        <div class="flows-title">Product Flows</div>
+        <div class="flows-subtitle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Auto-detected from your prompt and code architecture
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Menu -->
+    <div class="flows-tab-menu fade-in">
+      <button class="flows-tab active" onclick="switchFlowsTab('testcases', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        User Stories
+        <span class="tab-count">${FLOWS.length}</span>
+      </button>
+      <button class="flows-tab" onclick="switchFlowsTab('userflows', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        User Flows
+        <span class="tab-count">3</span>
+      </button>
+      <button class="flows-tab" onclick="switchFlowsTab('widgets', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Widget Library
+        <span class="tab-count">${WIDGETS.length}</span>
+      </button>
+    </div>
+
+    <!-- Test Cases Tab -->
+    <div class="flows-tab-content active" id="tab-testcases">
+      <div class="flows-stats fade-in" id="flowStats" style="display:flex;gap:16px;margin-bottom:24px">
+        <div class="stat-card"><div class="stat-value">${FLOWS.length}</div><div class="stat-label">Total Flows</div></div>
+        <div class="stat-card passed"><div class="stat-value" id="statPassed">${totalPassed}</div><div class="stat-label">Passed</div></div>
+        <div class="stat-card failed"><div class="stat-value" id="statFailed">${totalFailed}</div><div class="stat-label">Failed</div></div>
+        <div class="stat-card"><div class="stat-value" id="statPending">${totalNotRun}</div><div class="stat-label">Not Run</div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn-run-all" onclick="runAllFlows()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Run All
+        </button>
+      </div>
+  `;
+
+  FLOWS.forEach((flow, idx) => {
+    const st = flowStates[idx];
+    html += buildFlowCardHTML(flow, idx, st);
+  });
+
+  html += `</div><!-- /tab-testcases -->`;
+
+  // User Flows Tab
+  html += buildUserFlowsTab();
+
+  // Widget Library Tab
+  html += buildWidgetLibraryTab();
+
+  container.innerHTML = html;
+}
+
+// ─── USER FLOWS TAB ───
+function buildUserFlowsTab() {
+  return `
+    <div class="flows-tab-content" id="tab-userflows">
+      <div class="uf-intro">
+        <strong>Interactive Site Map</strong> — auto-generated from your code architecture. Click any page node to drill down into its components and CTAs. Drag to pan, scroll to zoom.
+      </div>
+
+      <div class="flow-canvas-wrap" id="flowCanvasWrap">
+        <div class="canvas-grid"></div>
+        <svg class="flow-svg" id="flowSvg">
+          <defs>
+            <marker id="arrowM" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" class="arrow-head"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="flow-canvas" id="flowCanvas">
+          <!-- Nodes are rendered by JS -->
+        </div>
+        <div class="canvas-controls">
+          <button class="canvas-ctrl" onclick="canvasZoom(-.15)" title="Zoom out">−</button>
+          <div class="canvas-zoom-label" id="canvasZoomLabel">100%</div>
+          <button class="canvas-ctrl" onclick="canvasZoom(.15)" title="Zoom in">+</button>
+          <button class="canvas-ctrl" onclick="canvasReset()" title="Reset view">⌂</button>
+        </div>
+      </div>
+    </div><!-- /tab-userflows -->
+  `;
+}
+
+// ─── WIDGET LIBRARY TAB ───
+function buildWidgetLibraryTab() {
+  const categories = [...new Set(WIDGETS.map(w => w.category))];
+  let html = `
+    <div class="flows-tab-content" id="tab-widgets">
+      <div class="widget-lib-intro">
+        <strong>Component Library</strong> — all UI widgets detected in your generated site. Click any widget to inspect its props and interact with a live preview.
+      </div>
+
+      <div class="widget-categories">
+        <button class="widget-cat-btn active" onclick="filterWidgets('all', this)">All <span class="tab-count">${WIDGETS.length}</span></button>
+        ${categories.map(cat => {
+          const count = WIDGETS.filter(w => w.category === cat).length;
+          return `<button class="widget-cat-btn" onclick="filterWidgets('${cat}', this)">${cat} <span class="tab-count">${count}</span></button>`;
+        }).join('')}
+      </div>
+
+      <div class="widget-grid" id="widgetGrid">
+  `;
+
+  WIDGETS.forEach((widget, idx) => {
+    // Generate default preview using render()
+    const defaultProps = {};
+    widget.props.forEach(p => { defaultProps[p.name] = p.default; });
+    const previewHtml = widget.render ? widget.render(defaultProps) : '';
+
+    html += `
+        <div class="widget-card fade-in" data-category="${widget.category}" id="widgetCard${idx}" onclick="expandWidget(${idx})">
+          <div class="widget-card-preview">
+            ${previewHtml}
+          </div>
+          <div class="widget-card-info">
+            <span class="widget-icon">${widget.icon}</span>
+            <div class="widget-card-meta">
+              <div class="widget-card-name">${widget.name}</div>
+              <span class="widget-card-cat">${widget.category}</span>
+            </div>
+          </div>
+        </div>
+    `;
+  });
+
+  html += `
+      </div><!-- /widget-grid -->
+
+      <!-- Expanded widget detail: Storybook-style two-column layout -->
+      <div class="widget-detail sb-layout" id="widgetDetail" style="display:none">
+        <div class="sb-preview-pane">
+          <button class="widget-detail-back" onclick="closeWidgetDetail()">← Back to Library</button>
+          <div class="widget-detail-header">
+            <span class="widget-detail-icon" id="wdIcon"></span>
+            <div>
+              <h3 class="widget-detail-name" id="wdName"></h3>
+              <span class="widget-detail-cat" id="wdCat"></span>
+            </div>
+          </div>
+          <p class="widget-detail-desc" id="wdDesc"></p>
+          <div class="widget-detail-section">
+            <h4>Live Preview</h4>
+            <div class="widget-detail-preview" id="wdPreview"></div>
+          </div>
+        </div>
+        <div class="sb-controls-pane">
+          <h4 class="sb-controls-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+            Controls
+          </h4>
+          <div class="widget-detail-props sb-controls" id="wdProps"></div>
+        </div>
+      </div>
+    </div><!-- /tab-widgets -->
+  `;
+  return html;
 }
 
 // ─── FLOWS TAB SWITCHING ───
@@ -1043,9 +1230,12 @@ export default function HomePage() {
 }
 
 // ─── WIDGET LIBRARY ───
+let currentWidgetIdx = null;
+
 function expandWidget(idx) {
   const widget = WIDGETS[idx];
   if (!widget) return;
+  currentWidgetIdx = idx;
 
   const grid = document.getElementById('widgetGrid');
   const detail = document.getElementById('widgetDetail');
@@ -1054,18 +1244,88 @@ function expandWidget(idx) {
 
   grid.style.display = 'none';
   if (cats) cats.style.display = 'none';
-  detail.style.display = 'block';
+  detail.style.display = 'flex';
 
   document.getElementById('wdIcon').textContent = widget.icon;
   document.getElementById('wdName').textContent = widget.name;
   document.getElementById('wdCat').textContent = widget.category;
   document.getElementById('wdDesc').textContent = widget.description;
-  document.getElementById('wdPreview').innerHTML = widget.preview;
-  document.getElementById('wdProps').innerHTML = widget.props
-    .map(p => `<span class="widget-prop-tag">${p}</span>`).join('');
+
+  // Build controls panel
+  const propsEl = document.getElementById('wdProps');
+  propsEl.innerHTML = widget.props.map((p, pi) => {
+    if (p.type === 'color') {
+      return `<div class="sb-control">
+        <label class="sb-label">${p.name}</label>
+        <div class="sb-color-row">
+          <input type="color" class="sb-color" value="${p.default}" data-prop="${pi}" oninput="updateWidgetPreview()">
+          <span class="sb-color-hex">${p.default}</span>
+        </div>
+      </div>`;
+    }
+    if (p.type === 'select') {
+      return `<div class="sb-control">
+        <label class="sb-label">${p.name}</label>
+        <select class="sb-select" data-prop="${pi}" onchange="updateWidgetPreview()">
+          ${(p.options || []).map(o => `<option value="${o}" ${o === p.default ? 'selected' : ''}>${o}</option>`).join('')}
+        </select>
+      </div>`;
+    }
+    if (p.type === 'boolean') {
+      return `<div class="sb-control sb-control-row">
+        <label class="sb-label">${p.name}</label>
+        <input type="checkbox" class="sb-toggle" data-prop="${pi}" ${p.default ? 'checked' : ''} onchange="updateWidgetPreview()">
+      </div>`;
+    }
+    // Default: text
+    return `<div class="sb-control">
+      <label class="sb-label">${p.name}</label>
+      <input type="text" class="sb-input" value="${p.default}" data-prop="${pi}" oninput="updateWidgetPreview()">
+    </div>`;
+  }).join('') + `<button class="sb-reset" onclick="resetWidgetProps()">Reset to Defaults</button>`;
+
+  // Render initial preview
+  updateWidgetPreview();
+}
+
+function updateWidgetPreview() {
+  const widget = WIDGETS[currentWidgetIdx];
+  if (!widget || !widget.render) return;
+
+  // Collect current prop values from inputs
+  const props = {};
+  widget.props.forEach((p, pi) => {
+    const input = document.querySelector(`[data-prop="${pi}"]`);
+    if (!input) { props[p.name] = p.default; return; }
+    if (p.type === 'boolean') {
+      props[p.name] = input.checked;
+    } else {
+      props[p.name] = input.value;
+    }
+    // Update color hex display
+    if (p.type === 'color') {
+      const hex = input.parentElement.querySelector('.sb-color-hex');
+      if (hex) hex.textContent = input.value;
+    }
+  });
+
+  document.getElementById('wdPreview').innerHTML = widget.render(props);
+}
+
+function resetWidgetProps() {
+  const widget = WIDGETS[currentWidgetIdx];
+  if (!widget) return;
+  widget.props.forEach((p, pi) => {
+    const input = document.querySelector(`[data-prop="${pi}"]`);
+    if (!input) return;
+    if (p.type === 'boolean') { input.checked = !!p.default; }
+    else { input.value = p.default; }
+  });
+  updateWidgetPreview();
 }
 
 function closeWidgetDetail() {
+  currentWidgetIdx = null;
   const grid = document.getElementById('widgetGrid');
   const detail = document.getElementById('widgetDetail');
   const cats = document.querySelector('.widget-categories');
@@ -1115,3 +1375,5 @@ window.toggleTreeNode = toggleTreeNode;
 window.expandWidget = expandWidget;
 window.closeWidgetDetail = closeWidgetDetail;
 window.filterWidgets = filterWidgets;
+window.updateWidgetPreview = updateWidgetPreview;
+window.resetWidgetProps = resetWidgetProps;
