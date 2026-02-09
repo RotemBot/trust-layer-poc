@@ -385,6 +385,8 @@ const VERSIONS = [
   {
     hash: 'a1b0e7d', label: 'v1.0 — Initial Generation', date: 'Feb 6, 10:33 AM',
     changes: [],
+    widgetChanges: [],
+    flowChanges: [],
     description: 'Initial site generation from prompt. All flows baseline.',
   },
   {
@@ -392,6 +394,13 @@ const VERSIONS = [
     changes: [
       { nodeId: 'uf-auth', type: 'modified', desc: 'Registration entry point changed' },
       { nodeId: 'uf-cta', type: 'modified', desc: 'Homepage CTAs updated' },
+    ],
+    widgetChanges: [
+      { widgetId: 'navigation', type: 'modified', desc: 'Sign Up button removed from nav' },
+      { widgetId: 'hero-banner', type: 'modified', desc: 'Hero CTA now primary registration entry' },
+    ],
+    flowChanges: [
+      { flowId: 'user-registration', type: 'modified', desc: 'Registration entry point changed from nav to hero CTA' },
     ],
     diffs: [
       {
@@ -411,6 +420,13 @@ const VERSIONS = [
       { nodeId: 'uf-nav-catalog', type: 'modified', desc: 'Search component restructured' },
       { nodeId: 'uf-nav-home', type: 'modified', desc: 'Search moved from catalog to global header' },
     ],
+    widgetChanges: [
+      { widgetId: 'search-filter', type: 'modified', desc: 'Search input moved to global header' },
+      { widgetId: 'navigation', type: 'modified', desc: 'Search bar integrated into nav' },
+    ],
+    flowChanges: [
+      { flowId: 'browse-catalog', type: 'modified', desc: 'Search step now starts from header instead of catalog page' },
+    ],
     diffs: [
       {
         id: 'search-moved',
@@ -429,6 +445,15 @@ const VERSIONS = [
       { nodeId: 'uf-cta', type: 'modified', desc: 'New CTA added to homepage' },
       { nodeId: 'uf-nav-catalog-detail', type: 'modified', desc: 'Borrow modal updated' },
     ],
+    widgetChanges: [
+      { widgetId: 'hero-banner', type: 'modified', desc: 'Quick Borrow card added below hero' },
+      { widgetId: 'booking-modal', type: 'modified', desc: 'Simplified booking form with fewer fields' },
+      { widgetId: 'tool-card', type: 'added', desc: 'New featured tool card variant for quick borrow' },
+    ],
+    flowChanges: [
+      { flowId: 'request-tool-loan', type: 'modified', desc: 'New quick borrow shortcut from homepage' },
+      { flowId: 'browse-catalog', type: 'modified', desc: 'Featured tool card links directly to borrow modal' },
+    ],
     diffs: [
       {
         id: 'quick-borrow-added',
@@ -445,6 +470,14 @@ const VERSIONS = [
     hash: '4a3f2c1', label: 'v1.4 — Admin Overdue Redesign', date: 'Feb 8, 10:12 AM',
     changes: [
       { nodeId: 'uf-nav-dashboard', type: 'modified', desc: 'Dashboard notifications revamped' },
+    ],
+    widgetChanges: [
+      { widgetId: 'hero-banner', type: 'modified', desc: 'Admin Access button removed from hero' },
+      { widgetId: 'navigation', type: 'modified', desc: 'Admin link moved to account dropdown' },
+    ],
+    flowChanges: [
+      { flowId: 'admin-manage-inventory', type: 'modified', desc: 'Admin access moved to account menu' },
+      { flowId: 'return-tool', type: 'modified', desc: 'Overdue alert banner replaces badge notification' },
     ],
     diffs: [
       {
@@ -466,6 +499,213 @@ const VERSIONS = [
     ],
     description: 'Redesigned overdue notifications + moved Admin Access button to account menu.',
   },
+];
+
+// ─── WIDGET LIBRARY ───
+const WIDGETS = [
+  {
+    id: 'hero-banner',
+    name: 'Hero Banner',
+    category: 'Layout',
+    icon: '🎯',
+    description: 'Full-width hero section with headline, sub-text, CTA buttons and a decorative image area. Supports customizable badge text.',
+    props: ['title', 'subtitle', 'badge', 'primaryCta', 'secondaryCta'],
+    preview: `
+      <div style="background:linear-gradient(135deg,#0a0a15 60%,#1a1030);padding:32px;border-radius:12px;color:#fff;font-family:system-ui">
+        <div style="font-size:9px;letter-spacing:2px;color:#f97316;margin-bottom:12px;font-weight:700">SYSTEM ONLINE V2.0</div>
+        <div style="font-size:22px;font-weight:900;line-height:1.15;margin-bottom:10px">SHARE <span style="color:#f97316">TOOLS</span>.<br>BUILD <span style="color:#f97316">FUTURE</span>.</div>
+        <div style="font-size:11px;color:#999;margin-bottom:16px;max-width:280px">Access professional-grade equipment without the overhead.</div>
+        <div style="display:flex;gap:8px">
+          <button style="background:#f97316;color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">BROWSE CATALOG →</button>
+          <button style="background:transparent;color:#fff;border:1px solid #333;padding:8px 16px;border-radius:6px;font-size:11px;cursor:pointer">🔧 ADMIN ACCESS</button>
+        </div>
+      </div>`
+  },
+  {
+    id: 'navigation',
+    name: 'Navigation Bar',
+    category: 'Layout',
+    icon: '🧭',
+    description: 'Responsive top navigation with logo, page links and a sign-in button. Sticky positioning with backdrop blur.',
+    props: ['logo', 'links', 'ctaLabel'],
+    preview: `
+      <div style="background:#0a0a15;padding:14px 20px;border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-family:system-ui">
+        <div style="display:flex;align-items:center;gap:8px;font-weight:700;color:#fff;font-size:14px">🔧 ToolShare</div>
+        <div style="display:flex;gap:16px;align-items:center">
+          <a style="color:#fff;font-size:12px;text-decoration:none;cursor:pointer">Home</a>
+          <a style="color:#888;font-size:12px;text-decoration:none;cursor:pointer">Catalog</a>
+          <a style="color:#888;font-size:12px;text-decoration:none;cursor:pointer">Admin</a>
+          <button style="background:#7c3aed;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">Sign In</button>
+        </div>
+      </div>`
+  },
+  {
+    id: 'tool-card',
+    name: 'Tool Card',
+    category: 'Components',
+    icon: '🃏',
+    description: 'Catalog item card with image placeholder, status badge, name, category tag and description. Supports Available, On Loan, High Risk and Maintenance states.',
+    props: ['image', 'name', 'category', 'description', 'status'],
+    preview: `
+      <div style="background:#12121e;border-radius:12px;overflow:hidden;width:220px;font-family:system-ui;border:1px solid #1e1e33">
+        <div style="background:#1a1a2e;height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;position:relative">
+          🔩
+          <span style="position:absolute;top:8px;right:8px;background:#22c55e;color:#000;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px">Available</span>
+        </div>
+        <div style="padding:14px">
+          <div style="font-weight:700;color:#fff;font-size:13px;margin-bottom:4px">Cordless Drill</div>
+          <span style="font-size:9px;font-weight:700;color:#f97316;letter-spacing:1px">POWER TOOLS</span>
+          <div style="font-size:11px;color:#888;margin-top:6px;line-height:1.4">20V MAX cordless drill driver with brushless motor.</div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'search-filter',
+    name: 'Search & Filter Bar',
+    category: 'Components',
+    icon: '🔍',
+    description: 'Combined search input with category filter dropdown. Real-time search with icon prefix and responsive layout.',
+    props: ['placeholder', 'categories', 'selectedCategory'],
+    preview: `
+      <div style="display:flex;gap:10px;padding:16px;background:#0f0f1a;border-radius:10px;font-family:system-ui">
+        <div style="flex:1;display:flex;align-items:center;gap:8px;background:#1a1a2e;border:1px solid #2a2a40;border-radius:8px;padding:10px 14px">
+          <span style="color:#666">🔍</span>
+          <span style="color:#555;font-size:13px">Search tools...</span>
+        </div>
+        <button style="background:#1a1a2e;color:#ccc;border:1px solid #2a2a40;padding:10px 16px;border-radius:8px;font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer">
+          ☰ All Categories
+        </button>
+      </div>`
+  },
+  {
+    id: 'stats-counter',
+    name: 'Stats Counter',
+    category: 'Components',
+    icon: '📊',
+    description: 'Animated statistics display card with large number, label and descriptive sub-text. Features subtle gear decoration.',
+    props: ['value', 'label', 'subtext'],
+    preview: `
+      <div style="display:flex;gap:12px;font-family:system-ui">
+        <div style="background:#12121e;border:1px solid #1e1e33;border-radius:12px;padding:20px;text-align:center;flex:1">
+          <div style="font-size:10px;color:#444;margin-bottom:4px">⚙</div>
+          <div style="font-size:28px;font-weight:900;color:#fff">150+</div>
+          <div style="font-size:12px;color:#ccc;margin-top:2px">Tools</div>
+          <div style="font-size:9px;color:#555;letter-spacing:1px;margin-top:4px">PROFESSIONAL GRADE</div>
+        </div>
+        <div style="background:#12121e;border:1px solid #1e1e33;border-radius:12px;padding:20px;text-align:center;flex:1">
+          <div style="font-size:10px;color:#444;margin-bottom:4px">⚙</div>
+          <div style="font-size:28px;font-weight:900;color:#fff">98%</div>
+          <div style="font-size:12px;color:#ccc;margin-top:2px">Available</div>
+          <div style="font-size:9px;color:#555;letter-spacing:1px;margin-top:4px">READY FOR PICKUP</div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'workflow-steps',
+    name: 'Workflow Steps',
+    category: 'Layout',
+    icon: '📋',
+    description: 'Numbered step-by-step workflow display with icons, titles and descriptions. Used to explain the tool borrowing process.',
+    props: ['steps[]', 'step.number', 'step.icon', 'step.title', 'step.description'],
+    preview: `
+      <div style="background:#0f0f1a;padding:20px;border-radius:12px;font-family:system-ui;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:12px;background:#12121e;padding:14px;border-radius:10px;border:1px solid #1e1e33">
+          <div style="color:#f97316;font-weight:900;font-size:16px;min-width:24px">01</div>
+          <div style="font-size:20px">🔍</div>
+          <div><div style="color:#fff;font-size:12px;font-weight:700">Browse Tools</div><div style="color:#888;font-size:10px;margin-top:2px">Explore our extensive catalog</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:#12121e;padding:14px;border-radius:10px;border:1px solid #1e1e33">
+          <div style="color:#f97316;font-weight:900;font-size:16px;min-width:24px">02</div>
+          <div style="font-size:20px">📅</div>
+          <div><div style="color:#fff;font-size:12px;font-weight:700">Easy Booking</div><div style="color:#888;font-size:10px;margin-top:2px">Reserve with our simple system</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;background:#12121e;padding:14px;border-radius:10px;border:1px solid #1e1e33">
+          <div style="color:#f97316;font-weight:900;font-size:16px;min-width:24px">03</div>
+          <div style="font-size:20px">🛡️</div>
+          <div><div style="color:#fff;font-size:12px;font-weight:700">Safety First</div><div style="color:#888;font-size:10px;margin-top:2px">Automatic safety restrictions</div></div>
+        </div>
+      </div>`
+  },
+  {
+    id: 'marquee',
+    name: 'Marquee Ticker',
+    category: 'Layout',
+    icon: '📰',
+    description: 'Infinite-scrolling horizontal ticker with decorative items. CSS-only animation with configurable speed.',
+    props: ['items[]', 'speed'],
+    preview: `
+      <div style="background:#0a0a15;padding:14px 0;border-radius:10px;overflow:hidden;font-family:system-ui;position:relative">
+        <div style="display:flex;gap:24px;animation:none;white-space:nowrap;padding:0 16px">
+          <span style="color:#888;font-size:11px;font-weight:600">✦ HIGH PRECISION TOOLS <span style="color:#333">●</span></span>
+          <span style="color:#888;font-size:11px;font-weight:600">✦ COMMUNITY DRIVEN <span style="color:#333">●</span></span>
+          <span style="color:#888;font-size:11px;font-weight:600">✦ SMART INVENTORY <span style="color:#333">●</span></span>
+          <span style="color:#888;font-size:11px;font-weight:600">✦ HIGH PRECISION TOOLS <span style="color:#333">●</span></span>
+        </div>
+      </div>`
+  },
+  {
+    id: 'cta-section',
+    name: 'CTA Section',
+    category: 'Layout',
+    icon: '📢',
+    description: 'Call-to-action section with badge, headline, description and dual action buttons. Centered layout with gradient background.',
+    props: ['badge', 'headline', 'description', 'primaryCta', 'secondaryCta'],
+    preview: `
+      <div style="background:linear-gradient(135deg,#0f0f1a,#1a1030);padding:32px;border-radius:12px;text-align:center;font-family:system-ui">
+        <div style="font-size:9px;letter-spacing:2px;color:#7c3aed;font-weight:700;margin-bottom:10px">SYSTEM READY</div>
+        <div style="font-size:18px;font-weight:900;color:#fff;line-height:1.2;margin-bottom:10px">INITIALIZE YOUR<br>PROJECT</div>
+        <div style="font-size:11px;color:#888;margin-bottom:16px;max-width:300px;margin-left:auto;margin-right:auto">Join the collective. Access professional tools.</div>
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button style="background:#f97316;color:#000;border:none;padding:8px 16px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">BROWSE CATALOG</button>
+          <button style="background:#1a1a1a;color:#fff;border:1px solid #333;padding:8px 16px;border-radius:6px;font-size:11px;cursor:pointer">AUTHENTICATE</button>
+        </div>
+      </div>`
+  },
+  {
+    id: 'footer',
+    name: 'Footer',
+    category: 'Layout',
+    icon: '🏷️',
+    description: 'Multi-column footer with brand section, link columns, contact info and copyright bar. Responsive grid layout.',
+    props: ['brand', 'columns[]', 'copyright'],
+    preview: `
+      <div style="background:#080810;padding:24px;border-radius:12px;font-family:system-ui;border:1px solid #1e1e33">
+        <div style="display:flex;gap:24px;margin-bottom:16px">
+          <div style="flex:1.5"><div style="color:#fff;font-weight:700;font-size:13px;margin-bottom:6px">🔧 ToolShare</div><div style="color:#666;font-size:10px;line-height:1.4">Building community through shared resources.</div></div>
+          <div style="flex:1"><div style="color:#888;font-size:10px;font-weight:700;margin-bottom:6px">Quick Links</div><div style="color:#555;font-size:10px;line-height:1.8">Browse Catalog<br>My Dashboard<br>My Profile</div></div>
+          <div style="flex:1"><div style="color:#888;font-size:10px;font-weight:700;margin-bottom:6px">Contact</div><div style="color:#555;font-size:10px;line-height:1.8">✉ hello@toolshare.com<br>📞 (555) 123-4567</div></div>
+        </div>
+        <div style="border-top:1px solid #1e1e33;padding-top:10px;display:flex;justify-content:space-between;color:#444;font-size:9px">
+          <span>© 2026 ToolShare</span><span>Privacy · Terms</span>
+        </div>
+      </div>`
+  },
+  {
+    id: 'booking-modal',
+    name: 'Booking Modal',
+    category: 'Components',
+    icon: '📅',
+    description: 'Date picker modal for scheduling tool pickup. Features calendar view, time slots and confirmation button.',
+    props: ['toolName', 'availableDates', 'timeSlots'],
+    preview: `
+      <div style="background:#12121e;border-radius:12px;padding:24px;font-family:system-ui;border:1px solid #2a2a40;max-width:280px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-weight:700;color:#fff;font-size:14px">📅 Book Tool</div>
+          <span style="color:#666;cursor:pointer;font-size:16px">✕</span>
+        </div>
+        <div style="color:#888;font-size:11px;margin-bottom:12px">Cordless Drill · Available</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:14px;text-align:center">
+          <div style="color:#555;font-size:9px;font-weight:700">Mo</div><div style="color:#555;font-size:9px;font-weight:700">Tu</div><div style="color:#555;font-size:9px;font-weight:700">We</div><div style="color:#555;font-size:9px;font-weight:700">Th</div><div style="color:#555;font-size:9px;font-weight:700">Fr</div><div style="color:#555;font-size:9px;font-weight:700">Sa</div><div style="color:#555;font-size:9px;font-weight:700">Su</div>
+          <div style="color:#444;font-size:10px;padding:4px">1</div><div style="color:#444;font-size:10px;padding:4px">2</div><div style="color:#fff;font-size:10px;padding:4px;background:#7c3aed;border-radius:4px">3</div><div style="color:#ccc;font-size:10px;padding:4px">4</div><div style="color:#ccc;font-size:10px;padding:4px">5</div><div style="color:#444;font-size:10px;padding:4px">6</div><div style="color:#444;font-size:10px;padding:4px">7</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:14px">
+          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#1e1e33;color:#ccc;cursor:pointer">9:00 AM</span>
+          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#7c3aed;color:#fff">11:00 AM</span>
+          <span style="padding:5px 10px;border-radius:6px;font-size:10px;background:#1e1e33;color:#ccc;cursor:pointer">2:00 PM</span>
+        </div>
+        <button style="width:100%;background:#7c3aed;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Confirm Booking</button>
+      </div>`
+  }
 ];
 
 let currentVersionIdx = VERSIONS.length - 1;
@@ -593,44 +833,19 @@ function selectPage(page) {
   document.getElementById('pageDropdown').style.display = 'none';
 
   const preview = document.getElementById('sitePreview');
-  const flows = document.getElementById('flowsPage');
-  const codeContent = document.getElementById('codeContent');
-  const flowsCode = document.getElementById('flowsPageCode');
-  const codeView = document.getElementById('codeEditorView');
   const siteHome = document.getElementById('siteHome');
   const siteCatalog = document.getElementById('siteCatalog');
 
-  // Check if we're currently in code view
-  const inCodeView = codeView && codeView.classList.contains('active');
-
-  if (page === 'Product Flows') {
-    if (inCodeView) {
-      codeContent.style.display = 'none';
-      flowsCode.style.display = 'block';
-      if (!flowsCode.innerHTML) renderFlowsPage('flowsPageCode');
-    } else {
-      preview.style.display = 'none';
-      flows.classList.add('active');
-      if (!flows.innerHTML) renderFlowsPage('flowsPage');
-    }
-  } else if (page === 'Catalog') {
-    // Show catalog page
+  if (page === 'Catalog') {
     preview.style.display = 'block';
-    flows.classList.remove('active');
     siteHome.style.display = 'none';
     siteCatalog.classList.add('active');
-    if (codeContent) codeContent.style.display = 'flex';
-    if (flowsCode) flowsCode.style.display = 'none';
-    // Scroll catalog to top
     preview.scrollTop = 0;
   } else {
     // Home / Admin / any other page → show home
     preview.style.display = 'block';
-    flows.classList.remove('active');
     siteHome.style.display = 'block';
     siteCatalog.classList.remove('active');
-    if (codeContent) codeContent.style.display = 'flex';
-    if (flowsCode) flowsCode.style.display = 'none';
     if (page === 'Home') preview.scrollTop = 0;
   }
 }
@@ -665,6 +880,11 @@ function renderFlowsPage(targetId) {
         User Flows
         <span class="tab-count">3</span>
       </button>
+      <button class="flows-tab" onclick="switchFlowsTab('widgets', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Widget Library
+        <span class="tab-count">${WIDGETS.length}</span>
+      </button>
     </div>
 
     <!-- Test Cases Tab -->
@@ -692,6 +912,9 @@ function renderFlowsPage(targetId) {
 
   // User Flows Tab
   html += buildUserFlowsTab();
+
+  // Widget Library Tab
+  html += buildWidgetLibraryTab();
 
   container.innerHTML = html;
 }
@@ -725,6 +948,71 @@ function buildUserFlowsTab() {
       </div>
     </div><!-- /tab-userflows -->
   `;
+}
+
+// ─── WIDGET LIBRARY TAB ───
+function buildWidgetLibraryTab() {
+  const categories = [...new Set(WIDGETS.map(w => w.category))];
+  let html = `
+    <div class="flows-tab-content" id="tab-widgets">
+      <div class="widget-lib-intro">
+        <strong>Component Library</strong> — all UI widgets detected in your generated site. Click any widget to inspect its props and interact with a live preview.
+      </div>
+
+      <div class="widget-categories">
+        <button class="widget-cat-btn active" onclick="filterWidgets('all', this)">All <span class="tab-count">${WIDGETS.length}</span></button>
+        ${categories.map(cat => {
+          const count = WIDGETS.filter(w => w.category === cat).length;
+          return `<button class="widget-cat-btn" onclick="filterWidgets('${cat}', this)">${cat} <span class="tab-count">${count}</span></button>`;
+        }).join('')}
+      </div>
+
+      <div class="widget-grid" id="widgetGrid">
+  `;
+
+  WIDGETS.forEach((widget, idx) => {
+    html += `
+        <div class="widget-card fade-in" data-category="${widget.category}" id="widgetCard${idx}" onclick="expandWidget(${idx})">
+          <div class="widget-card-preview">
+            ${widget.preview}
+          </div>
+          <div class="widget-card-info">
+            <span class="widget-icon">${widget.icon}</span>
+            <div class="widget-card-meta">
+              <div class="widget-card-name">${widget.name}</div>
+              <span class="widget-card-cat">${widget.category}</span>
+            </div>
+          </div>
+        </div>
+    `;
+  });
+
+  html += `
+      </div><!-- /widget-grid -->
+
+      <!-- Expanded widget detail (hidden by default) -->
+      <div class="widget-detail" id="widgetDetail" style="display:none">
+        <button class="widget-detail-back" onclick="closeWidgetDetail()">← Back to Library</button>
+        <div class="widget-detail-header">
+          <span class="widget-detail-icon" id="wdIcon"></span>
+          <div>
+            <h3 class="widget-detail-name" id="wdName"></h3>
+            <span class="widget-detail-cat" id="wdCat"></span>
+          </div>
+        </div>
+        <p class="widget-detail-desc" id="wdDesc"></p>
+        <div class="widget-detail-section">
+          <h4>Props</h4>
+          <div class="widget-detail-props" id="wdProps"></div>
+        </div>
+        <div class="widget-detail-section">
+          <h4>Live Preview</h4>
+          <div class="widget-detail-preview" id="wdPreview"></div>
+        </div>
+      </div>
+    </div><!-- /tab-widgets -->
+  `;
+  return html;
 }
 
 /* ─── CANVAS FLOW DATA ─── */

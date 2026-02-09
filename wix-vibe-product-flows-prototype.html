@@ -76,9 +76,9 @@
     <div class="editor-logo">WIX<span>Vibe</span></div>
     <div class="project-name">ToolShare</div>
     <div class="tab-group">
-      <button class="tab-item active" onclick="switchEditorTab('site')">Site</button>
-      <button class="tab-item" onclick="switchEditorTab('dashboard')">Dashboard</button>
-      <button class="tab-item" onclick="switchEditorTab('code')">Code</button>
+      <button class="tab-item active" onclick="switchEditorTab('site', event)">Site</button>
+      <button class="tab-item" onclick="switchEditorTab('dashboard', event)">Dashboard</button>
+      <button class="tab-item" onclick="switchEditorTab('advanced', event)">Advanced</button>
     </div>
     <div class="mode-group">
       <button class="mode-btn active">
@@ -113,7 +113,6 @@
           <div class="page-dd-item" onclick="selectPage('Home')" style="padding:8px 12px;font-size:13px;color:var(--text-primary);border-radius:6px;cursor:pointer">Home</div>
           <div class="page-dd-item" onclick="selectPage('Catalog')" style="padding:8px 12px;font-size:13px;color:var(--text-primary);border-radius:6px;cursor:pointer">Catalog</div>
           <div class="page-dd-item" onclick="selectPage('Admin')" style="padding:8px 12px;font-size:13px;color:var(--text-primary);border-radius:6px;cursor:pointer">Admin</div>
-          <!-- Product Flows moved to editor top bar -->
         </div>
         <div class="domain-bar">
           <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px;opacity:.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
@@ -523,105 +522,113 @@
         </div>
 
       </div>
-
-      <!-- Product Flows Page -->
-      <div class="flows-page" id="flowsPage"></div>
     </div>
 
-    <!-- Code Editor View (shown when Code tab is active) -->
-    <div class="code-editor-view" id="codeEditorView">
-      <div class="code-sidebar">
-        <button class="sidebar-pf-btn" onclick="selectPage('Product Flows')">
+    <!-- ═══════ ADVANCED VIEW ═══════ -->
+    <div class="advanced-view" id="advancedView">
+      <!-- Sub-tab bar: Flows | Code -->
+      <div class="advanced-sub-tabs">
+        <button class="adv-tab active" onclick="switchAdvancedSubTab('flows', event)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          Product Flows
-          <span class="pf-badge">NEW</span>
+          Flows
         </button>
-        <div class="code-sidebar-toolbar">
-          <button title="Explorer">☰</button>
-          <button title="Search">🔍</button>
-          <button title="Source Control">⑂</button>
-          <button title="Extensions">⧉</button>
+        <button class="adv-tab" onclick="switchAdvancedSubTab('code', event)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Code
+        </button>
+      </div>
+
+      <!-- Version Control Bar (shared across sub-tabs) -->
+      <div class="vc-bar" id="vcBar">
+        <div class="vc-label">
+          <svg style="width:13px;height:13px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
+          Version
         </div>
-        <div class="code-sidebar-title">Explorer</div>
-        <div class="code-sidebar-title" style="padding-top:4px;font-weight:700;color:var(--text-secondary);letter-spacing:0;text-transform:none;font-size:12px">USER-CODE</div>
-        <div class="code-tree">
-          <div class="tree-folder">▸ benchmark_events</div>
-          <div class="tree-folder">▸ eslint-rules</div>
-          <div class="tree-folder">▸ integrations</div>
-          <div class="tree-folder">▸ public</div>
-          <div class="tree-folder">▾ src</div>
-          <div class="tree-folder tree-indent-1">▸ .vibe</div>
-          <div class="tree-folder tree-indent-1">▾ components</div>
-          <div class="tree-folder tree-indent-2">▾ pages</div>
-          <div class="tree-file tree-indent-3" style="color:#4EC9B0">CatalogPage.tsx</div>
-          <div class="tree-file tree-indent-3" style="color:#4EC9B0">DashboardPage.tsx</div>
-          <div class="tree-file tree-indent-3 active" style="color:#4EC9B0">HomePage.tsx</div>
-          <div class="tree-file tree-indent-3" style="color:#4EC9B0">ProfilePage.tsx</div>
-          <div class="tree-file tree-indent-3" style="color:#4EC9B0">ToolDetailPage.tsx</div>
-          <div class="tree-folder tree-indent-2">▸ ui</div>
-          <div class="tree-file tree-indent-2" style="color:#4EC9B0">BookingModal.tsx</div>
-          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Footer.tsx</div>
-          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Head.tsx</div>
-          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Header.tsx</div>
-          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Router.tsx</div>
-          <div class="tree-folder tree-indent-1">▸ entities</div>
-          <div class="tree-folder tree-indent-1">▸ hooks</div>
-          <div class="tree-folder tree-indent-1">▸ lib</div>
-          <div class="tree-folder tree-indent-1">▸ pages</div>
-          <div class="tree-folder tree-indent-1">▸ styles</div>
-          <div class="tree-file tree-indent-1" style="color:#3B82F6">env.d.ts</div>
-          <div class="tree-file tree-indent-1" style="color:#F59E0B">tailwind.config.mjs</div>
-          <div class="tree-file">⚙ .gitignore</div>
+        <div class="vc-nav">
+          <button class="vc-nav-btn" onclick="vcPrev()" id="vcPrevBtn" disabled>◀</button>
+        </div>
+        <div class="vc-selector" id="vcSelector">
+          <span class="vc-hash">#</span><span id="vcHashText">4a3f2c1</span>
+          <span id="vcDateText" style="color:var(--text-muted);font-weight:400">· latest</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="vc-timeline" id="vcTimeline"></div>
+        <div class="vc-diff-count" id="vcDiffCount" style="display:none">0 changes</div>
+        <div class="vc-nav">
+          <button class="vc-nav-btn" onclick="vcNext()" id="vcNextBtn" disabled>▶</button>
         </div>
       </div>
-      <div class="code-main">
-        <div class="code-topbar">
-          <div class="code-topbar-left">Code</div>
-          <div class="code-topbar-right">
-            <button class="code-topbar-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
-              GitHub
-            </button>
-            <button class="code-topbar-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
-              Split view
-            </button>
+
+      <!-- Flows Panel (default active) -->
+      <div class="flows-page active" id="flowsPage"></div>
+
+      <!-- Code Panel -->
+      <div class="code-editor-view" id="codeEditorView">
+        <div class="code-sidebar">
+          <div class="code-sidebar-toolbar">
+            <button title="Explorer">☰</button>
+            <button title="Search">🔍</button>
+            <button title="Source Control">⑂</button>
+            <button title="Extensions">⧉</button>
+          </div>
+          <div class="code-sidebar-title">Explorer</div>
+          <div class="code-sidebar-title" style="padding-top:4px;font-weight:700;color:var(--text-secondary);letter-spacing:0;text-transform:none;font-size:12px">USER-CODE</div>
+          <div class="code-tree">
+            <div class="tree-folder">▸ benchmark_events</div>
+            <div class="tree-folder">▸ eslint-rules</div>
+            <div class="tree-folder">▸ integrations</div>
+            <div class="tree-folder">▸ public</div>
+            <div class="tree-folder">▾ src</div>
+            <div class="tree-folder tree-indent-1">▸ .vibe</div>
+            <div class="tree-folder tree-indent-1">▾ components</div>
+            <div class="tree-folder tree-indent-2">▾ pages</div>
+            <div class="tree-file tree-indent-3" style="color:#4EC9B0">CatalogPage.tsx</div>
+            <div class="tree-file tree-indent-3" style="color:#4EC9B0">DashboardPage.tsx</div>
+            <div class="tree-file tree-indent-3 active" style="color:#4EC9B0">HomePage.tsx</div>
+            <div class="tree-file tree-indent-3" style="color:#4EC9B0">ProfilePage.tsx</div>
+            <div class="tree-file tree-indent-3" style="color:#4EC9B0">ToolDetailPage.tsx</div>
+            <div class="tree-folder tree-indent-2">▸ ui</div>
+            <div class="tree-file tree-indent-2" style="color:#4EC9B0">BookingModal.tsx</div>
+            <div class="tree-file tree-indent-2" style="color:#4EC9B0">Footer.tsx</div>
+            <div class="tree-file tree-indent-2" style="color:#4EC9B0">Head.tsx</div>
+            <div class="tree-file tree-indent-2" style="color:#4EC9B0">Header.tsx</div>
+            <div class="tree-file tree-indent-2" style="color:#4EC9B0">Router.tsx</div>
+            <div class="tree-folder tree-indent-1">▸ entities</div>
+            <div class="tree-folder tree-indent-1">▸ hooks</div>
+            <div class="tree-folder tree-indent-1">▸ lib</div>
+            <div class="tree-folder tree-indent-1">▸ pages</div>
+            <div class="tree-folder tree-indent-1">▸ styles</div>
+            <div class="tree-file tree-indent-1" style="color:#3B82F6">env.d.ts</div>
+            <div class="tree-file tree-indent-1" style="color:#F59E0B">tailwind.config.mjs</div>
+            <div class="tree-file">⚙ .gitignore</div>
           </div>
         </div>
-        <!-- Version Control Bar -->
-        <div class="vc-bar" id="vcBar">
-          <div class="vc-label">
-            <svg style="width:13px;height:13px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
-            Version
-          </div>
-          <div class="vc-nav">
-            <button class="vc-nav-btn" onclick="vcPrev()" id="vcPrevBtn" disabled>◀</button>
-          </div>
-          <div class="vc-selector" id="vcSelector" onclick="toggleVcDropdown()">
-            <span class="vc-hash">#</span><span id="vcHashText">4a3f2c1</span>
-            <span id="vcDateText" style="color:var(--text-muted);font-weight:400">· latest</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-          </div>
-          <div class="vc-timeline" id="vcTimeline"></div>
-          <div class="vc-diff-count" id="vcDiffCount" style="display:none">0 changes</div>
-          <div class="vc-nav">
-            <button class="vc-nav-btn" onclick="vcNext()" id="vcNextBtn" disabled>▶</button>
-          </div>
-        </div>
-        <!-- Code content (visible by default in code tab) -->
-        <div id="codeContent" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
-          <div class="code-tab-bar">
-            <div class="code-tab active">
-              <span style="color:#4EC9B0">✦</span> HomePage.tsx <span class="close-x">×</span>
+        <div class="code-main">
+          <div class="code-topbar">
+            <div class="code-topbar-left">Code</div>
+            <div class="code-topbar-right">
+              <button class="code-topbar-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+                GitHub
+              </button>
+              <button class="code-topbar-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+                Split view
+              </button>
             </div>
           </div>
-          <div class="code-breadcrumb">
-            src <span>›</span> components <span>›</span> pages <span>›</span> <span style="color:var(--text-primary)">HomePage.tsx</span> <span>›</span> ...
+          <div id="codeContent" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+            <div class="code-tab-bar">
+              <div class="code-tab active">
+                <span style="color:#4EC9B0">✦</span> HomePage.tsx <span class="close-x">×</span>
+              </div>
+            </div>
+            <div class="code-breadcrumb">
+              src <span>›</span> components <span>›</span> pages <span>›</span> <span style="color:var(--text-primary)">HomePage.tsx</span> <span>›</span> ...
+            </div>
+            <div class="code-edit-area" id="codeEditArea"></div>
           </div>
-          <div class="code-edit-area" id="codeEditArea"></div>
         </div>
-        <!-- Product Flows panel (replaces code when activated) -->
-        <div class="flows-page" id="flowsPageCode" style="display:none"></div>
       </div>
     </div>
   </div>

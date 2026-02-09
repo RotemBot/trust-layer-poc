@@ -244,6 +244,123 @@ function openVisualize(idx) {
   document.getElementById('visModal').classList.add('active');
 }
 
+function getStepMockup(step) {
+  const url = step.url || '';
+  // Catalog page with filters
+  if (url.includes('/catalog') && url.includes('cat=')) {
+    const cat = (url.match(/cat=([^&]+)/) || [])[1] || 'all';
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <div style="flex:1;background:#f5f5f5;border:2px solid #4F46E5;border-radius:6px;padding:8px 12px;font-size:12px;color:#666">🔍 ${url.includes('q=') ? (url.match(/q=([^&]+)/) || [])[1] || '' : 'Search tools...'}</div>
+          <div style="background:#4F46E5;color:#fff;padding:8px 12px;border-radius:6px;font-size:11px;font-weight:700">${cat.replace(/-/g,' ').toUpperCase()}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;margin-bottom:4px">🔩</div><div style="font-size:11px;font-weight:600">Cordless Drill</div><span style="font-size:9px;color:#22c55e;font-weight:700">Available</span></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;margin-bottom:4px">🪚</div><div style="font-size:11px;font-weight:600">Circular Saw</div><span style="font-size:9px;color:#ef4444;font-weight:700">High Risk</span></div>
+        </div>
+      </div>`;
+  }
+  // Tool detail page
+  if (url.includes('/catalog/')) {
+    const toolName = (url.split('/catalog/')[1] || 'tool').replace(/-/g, ' ');
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div style="width:100px;height:100px;background:#f5f5f5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0">🔩</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;text-transform:capitalize;margin-bottom:4px">${toolName}</div>
+            <span style="font-size:10px;font-weight:700;color:#f97316;letter-spacing:1px">POWER TOOLS</span>
+            <div style="font-size:11px;color:#666;margin-top:6px;line-height:1.4">20V MAX cordless drill driver with brushless motor, 2-speed gearbox.</div>
+            <span style="display:inline-block;margin-top:8px;background:#22c55e;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px">✓ Available</span>
+          </div>
+        </div>
+        <button style="margin-top:14px;width:100%;background:#4F46E5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📅 Book This Tool</button>
+      </div>`;
+  }
+  // Booking / request pages
+  if (url.includes('/book') || url.includes('/request') || url.includes('borrow')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">📅 Book Tool</div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:10px">
+          <div style="font-size:11px;color:#888;margin-bottom:8px">Select pickup date</div>
+          <div style="display:flex;gap:6px">
+            <span style="padding:6px 10px;border-radius:6px;font-size:11px;background:#e5e7eb;color:#333">Today</span>
+            <span style="padding:6px 10px;border-radius:6px;font-size:11px;background:#4F46E5;color:#fff;font-weight:700">Tomorrow</span>
+            <span style="padding:6px 10px;border-radius:6px;font-size:11px;background:#e5e7eb;color:#333">Feb 12</span>
+          </div>
+        </div>
+        <button style="width:100%;background:#4F46E5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700">Confirm Request</button>
+      </div>`;
+  }
+  // Dashboard / loans
+  if (url.includes('/dashboard') || url.includes('/loans')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">My Active Loans</div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🔩</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">Cordless Drill</div><div style="font-size:10px;color:#888">Due: Feb 15, 2026</div></div>
+          <button style="background:#7c3aed;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:10px;font-weight:700">Return</button>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🔨</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">Claw Hammer</div><div style="font-size:10px;color:#888">Due: Feb 20, 2026</div></div>
+          <button style="background:#7c3aed;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:10px;font-weight:700">Return</button>
+        </div>
+      </div>`;
+  }
+  // Admin pages
+  if (url.includes('/admin')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">🛡️ Admin Dashboard</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#16a34a">12</div><div style="font-size:10px;color:#888">Pending</div></div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#dc2626">3</div><div style="font-size:10px;color:#888">Overdue</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;font-size:11px;color:#666">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:600;color:#333">Recent Request</span><span style="color:#f97316">Pending</span></div>
+          <div>John D. → Cordless Drill · Feb 10</div>
+        </div>
+      </div>`;
+  }
+  // Catalog main page
+  if (url.includes('/catalog')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="text-align:center;margin-bottom:12px"><div style="font-size:16px;font-weight:800">Tool Catalog</div><div style="font-size:11px;color:#888">Browse our complete collection</div></div>
+        <div style="background:#f5f5f5;border-radius:6px;padding:8px 12px;font-size:12px;color:#999;margin-bottom:10px">🔍 Search tools...</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px">🔩</div><div style="font-size:9px;font-weight:600;margin-top:2px">Drill</div></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px">🪚</div><div style="font-size:9px;font-weight:600;margin-top:2px">Saw</div></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px">🔧</div><div style="font-size:9px;font-weight:600;margin-top:2px">Sander</div></div>
+        </div>
+      </div>`;
+  }
+  // Home / registration / generic
+  if (url.includes('/register') || url.includes('/signup')) {
+    return `
+      <div style="font-family:system-ui;padding:12px;text-align:center">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">Create Account</div>
+        <div style="text-align:left;display:flex;flex-direction:column;gap:8px">
+          <div><div style="font-size:10px;color:#888;margin-bottom:2px">Name</div><div style="background:#f5f5f5;border:1px solid #e5e7eb;border-radius:6px;padding:8px;font-size:11px;color:#333">John Doe</div></div>
+          <div><div style="font-size:10px;color:#888;margin-bottom:2px">Email</div><div style="background:#f5f5f5;border:1px solid #e5e7eb;border-radius:6px;padding:8px;font-size:11px;color:#333">john@example.com</div></div>
+        </div>
+        <button style="margin-top:12px;width:100%;background:#4F46E5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700">Sign Up</button>
+      </div>`;
+  }
+  // Default: home page
+  return `
+    <div style="font-family:system-ui;padding:12px;text-align:center">
+      <div style="font-size:10px;letter-spacing:2px;color:#f97316;font-weight:700;margin-bottom:8px">TOOLSHARE</div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:6px">SHARE TOOLS.<br>BUILD FUTURE.</div>
+      <div style="font-size:11px;color:#888;margin-bottom:12px">Access professional-grade equipment</div>
+      <button style="background:#f97316;color:#000;border:none;padding:8px 20px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">BROWSE CATALOG →</button>
+    </div>`;
+}
+
 function renderVisStep() {
   const flow = FLOWS[visFlowIdx];
   const step = flow.steps[visStepIdx];
@@ -253,13 +370,18 @@ function renderVisStep() {
   const viewport = document.getElementById('visStepContent');
   const isLast = visStepIdx === flow.steps.length - 1;
 
+  const mockupHtml = getStepMockup(step);
+
   viewport.innerHTML = `
-    <div class="vis-step-num">Step ${visStepIdx + 1} of ${flow.steps.length}</div>
-    <div class="vis-step-action">${step.action}</div>
-    <div class="vis-step-detail">${step.detail}</div>
-    ${!isLast ? '<div class="vis-click-indicator"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2"><path d="M6 3l14 9-14 9V3z"/></svg></div>' : '<div style="margin-top:16px;font-size:24px">✅</div>'}
+    <div class="vis-mockup">${mockupHtml}</div>
+    <div class="vis-step-overlay">
+      <div class="vis-step-num">Step ${visStepIdx + 1} of ${flow.steps.length}</div>
+      <div class="vis-step-action">${step.action}</div>
+      <div class="vis-step-detail">${step.detail}</div>
+      ${isLast ? '<div style="margin-top:10px;font-size:20px">✅</div>' : ''}
+    </div>
   `;
-  viewport.parentElement.style.background = isLast ? '#F0FFF4' : '#FAF8F5';
+  viewport.parentElement.style.background = '#FAF8F5';
 
   // Dots
   const dotsContainer = document.getElementById('visStepDots');
@@ -341,39 +463,36 @@ document.addEventListener('click', e => {
 });
 
 // ─── EDITOR TAB SWITCHING ───
-function switchEditorTab(tab) {
+let currentAdvancedSubTab = 'flows';
+
+function switchEditorTab(tab, e) {
+  // Update top-bar tab buttons
   document.querySelectorAll('.tab-group .tab-item').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  if (e && e.target) e.target.classList.add('active');
 
   const chatPanel = document.getElementById('chatPanel');
   const previewArea = document.querySelector('.preview-area');
-  const codeView = document.getElementById('codeEditorView');
-  const flowsPage = document.getElementById('flowsPage');
-  const sitePreview = document.getElementById('sitePreview');
-  const pageBar = document.getElementById('pageBar');
+  const advancedView = document.getElementById('advancedView');
 
-  const codeContent = document.getElementById('codeContent');
-  const flowsCode = document.getElementById('flowsPageCode');
+  // Hide all panels first
+  previewArea.style.display = 'none';
+  advancedView.classList.remove('active');
 
-  if (tab === 'code') {
-    chatPanel.style.display = 'none';
-    previewArea.style.display = 'none';
-    codeView.classList.add('active');
-    // Reset code view to show code (not flows)
-    codeContent.style.display = 'flex';
-    flowsCode.style.display = 'none';
-    if (!document.getElementById('codeEditArea').innerHTML) renderCodeContent();
+  // Chat panel always visible
+  chatPanel.style.display = '';
+
+  if (tab === 'advanced') {
+    advancedView.classList.add('active');
+    switchAdvancedSubTab(currentAdvancedSubTab);
     initVersionTimeline();
   } else {
-    chatPanel.style.display = '';
+    // Site or Dashboard — show preview area
     previewArea.style.display = '';
-    codeView.classList.remove('active');
-    // Restore correct page view
-    flowsPage.classList.remove('active');
-    sitePreview.style.display = 'block';
-    // Show the right page based on currentPage
+    // Restore correct page based on currentPage
     const siteHome = document.getElementById('siteHome');
     const siteCatalog = document.getElementById('siteCatalog');
+    const sitePreview = document.getElementById('sitePreview');
+    sitePreview.style.display = 'block';
     if (currentPage === 'Catalog') {
       siteHome.style.display = 'none';
       siteCatalog.classList.add('active');
@@ -381,6 +500,35 @@ function switchEditorTab(tab) {
       siteHome.style.display = 'block';
       siteCatalog.classList.remove('active');
     }
+  }
+}
+
+// ─── ADVANCED SUB-TAB SWITCHING ───
+function switchAdvancedSubTab(subTab, e) {
+  currentAdvancedSubTab = subTab;
+
+  // Update sub-tab buttons
+  document.querySelectorAll('.adv-tab').forEach(t => t.classList.remove('active'));
+  if (e && e.target) {
+    e.target.closest('.adv-tab').classList.add('active');
+  } else {
+    // Programmatic call — find button by content
+    document.querySelectorAll('.adv-tab').forEach(t => {
+      if (t.textContent.trim().toLowerCase().startsWith(subTab)) t.classList.add('active');
+    });
+  }
+
+  const flowsPage = document.getElementById('flowsPage');
+  const codeView = document.getElementById('codeEditorView');
+
+  if (subTab === 'flows') {
+    flowsPage.classList.add('active');
+    codeView.classList.remove('active');
+    if (!flowsPage.innerHTML) renderFlowsPage('flowsPage');
+  } else {
+    flowsPage.classList.remove('active');
+    codeView.classList.add('active');
+    if (!document.getElementById('codeEditArea').innerHTML) renderCodeContent();
   }
 }
 
@@ -392,7 +540,7 @@ function switchFlowsTab(tab, btn) {
   btn.classList.add('active');
 
   // Update tab content
-  const container = btn.closest('.flows-page, #flowsPageCode, [id^="flowsPage"]') || btn.closest('[style*="overflow"]');
+  const container = btn.closest('.flows-page, [id^="flowsPage"]') || btn.closest('[style*="overflow"]');
   let parent = btn.parentElement.parentElement;
   parent.querySelectorAll('.flows-tab-content').forEach(c => c.classList.remove('active'));
   const target = parent.querySelector('#tab-' + tab);
@@ -434,12 +582,15 @@ function updateVcUI() {
   document.getElementById('vcPrevBtn').disabled = currentVersionIdx === 0;
   document.getElementById('vcNextBtn').disabled = currentVersionIdx === VERSIONS.length - 1;
 
-  // Update diff count
+  // Update diff count — include all pillar changes
   const dc = document.getElementById('vcDiffCount');
-  if (v.changes.length > 0) {
+  const canvasChanges = (v.changes || []).length;
+  const widgetChanges = (v.widgetChanges || []).length;
+  const flowChanges = (v.flowChanges || []).length;
+  const totalChanges = canvasChanges + widgetChanges + flowChanges;
+  if (totalChanges > 0) {
     dc.style.display = '';
-    const totalDiffs = v.diffs ? v.diffs.length : 0;
-    dc.textContent = totalDiffs + ' change' + (totalDiffs !== 1 ? 's' : '');
+    dc.textContent = totalChanges + ' change' + (totalChanges !== 1 ? 's' : '');
   } else {
     dc.style.display = 'none';
   }
@@ -449,8 +600,10 @@ function updateVcUI() {
     dot.classList.toggle('active', i === currentVersionIdx);
   });
 
-  // Apply diffs to user flows tree if visible
+  // Apply diffs across all pillars
   applyDiffsToTree();
+  applyWidgetDiffs();
+  applyFlowDiffs();
 }
 
 function goToVersion(idx) {
@@ -506,6 +659,67 @@ function applyCanvasVCS() {
   v.changes.forEach(change => {
     const node = document.getElementById(change.nodeId);
     if (node) node.classList.add('vcs-' + change.type);
+  });
+}
+
+// ─── WIDGET DIFFS ───
+function applyWidgetDiffs() {
+  // Clear all widget diff highlights
+  document.querySelectorAll('.widget-card').forEach(card => {
+    card.classList.remove('diff-added', 'diff-removed', 'diff-modified');
+    const badge = card.querySelector('.widget-diff-badge');
+    if (badge) badge.remove();
+  });
+
+  const v = VERSIONS[currentVersionIdx];
+  if (!v.widgetChanges || v.widgetChanges.length === 0) return;
+
+  v.widgetChanges.forEach(change => {
+    // Find widget card by matching widget id
+    const widgetIdx = WIDGETS.findIndex(w => w.id === change.widgetId);
+    if (widgetIdx === -1) return;
+    const card = document.getElementById(`widgetCard${widgetIdx}`);
+    if (!card) return;
+
+    card.classList.add('diff-' + change.type);
+
+    // Add diff badge
+    const badge = document.createElement('div');
+    badge.className = `widget-diff-badge diff-badge-${change.type}`;
+    badge.textContent = change.type.charAt(0).toUpperCase() + change.type.slice(1);
+    badge.title = change.desc;
+    card.querySelector('.widget-card-info').appendChild(badge);
+  });
+}
+
+// ─── FLOW / TEST CASE DIFFS ───
+function applyFlowDiffs() {
+  // Clear all flow diff highlights
+  document.querySelectorAll('.flow-card').forEach(card => {
+    card.classList.remove('diff-added', 'diff-removed', 'diff-modified');
+    const badge = card.querySelector('.flow-diff-badge');
+    if (badge) badge.remove();
+  });
+
+  const v = VERSIONS[currentVersionIdx];
+  if (!v.flowChanges || v.flowChanges.length === 0) return;
+
+  v.flowChanges.forEach(change => {
+    // Find flow card by matching flow id
+    const flowIdx = FLOWS.findIndex(f => f.id === change.flowId);
+    if (flowIdx === -1) return;
+    const card = document.getElementById(`flowCard${flowIdx}`);
+    if (!card) return;
+
+    card.classList.add('diff-' + change.type);
+
+    // Add diff badge
+    const badge = document.createElement('div');
+    badge.className = `flow-diff-badge diff-badge-${change.type}`;
+    badge.textContent = change.type.charAt(0).toUpperCase() + change.type.slice(1);
+    badge.title = change.desc;
+    const top = card.querySelector('.flow-card-top');
+    if (top) top.appendChild(badge);
   });
 }
 
@@ -828,12 +1042,60 @@ export default function HomePage() {
   }).join('');
 }
 
+// ─── WIDGET LIBRARY ───
+function expandWidget(idx) {
+  const widget = WIDGETS[idx];
+  if (!widget) return;
+
+  const grid = document.getElementById('widgetGrid');
+  const detail = document.getElementById('widgetDetail');
+  const cats = document.querySelector('.widget-categories');
+  if (!grid || !detail) return;
+
+  grid.style.display = 'none';
+  if (cats) cats.style.display = 'none';
+  detail.style.display = 'block';
+
+  document.getElementById('wdIcon').textContent = widget.icon;
+  document.getElementById('wdName').textContent = widget.name;
+  document.getElementById('wdCat').textContent = widget.category;
+  document.getElementById('wdDesc').textContent = widget.description;
+  document.getElementById('wdPreview').innerHTML = widget.preview;
+  document.getElementById('wdProps').innerHTML = widget.props
+    .map(p => `<span class="widget-prop-tag">${p}</span>`).join('');
+}
+
+function closeWidgetDetail() {
+  const grid = document.getElementById('widgetGrid');
+  const detail = document.getElementById('widgetDetail');
+  const cats = document.querySelector('.widget-categories');
+  if (grid) grid.style.display = '';
+  if (cats) cats.style.display = '';
+  if (detail) detail.style.display = 'none';
+}
+
+function filterWidgets(category, btn) {
+  // Update active state
+  document.querySelectorAll('.widget-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const cards = document.querySelectorAll('.widget-card');
+  cards.forEach(card => {
+    if (category === 'all' || card.dataset.category === category) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
 // Expose functions used by inline onclick handlers
 window.showScreen = showScreen;
 window.startGeneration = startGeneration;
 window.togglePageDropdown = togglePageDropdown;
 window.selectPage = selectPage;
 window.switchEditorTab = switchEditorTab;
+window.switchAdvancedSubTab = switchAdvancedSubTab;
 window.switchFlowsTab = switchFlowsTab;
 window.runAllFlows = runAllFlows;
 window.runFlow = runFlow;
@@ -850,3 +1112,6 @@ window.vcPrev = vcPrev;
 window.vcNext = vcNext;
 window.openVisualDiff = openVisualDiff;
 window.toggleTreeNode = toggleTreeNode;
+window.expandWidget = expandWidget;
+window.closeWidgetDetail = closeWidgetDetail;
+window.filterWidgets = filterWidgets;
