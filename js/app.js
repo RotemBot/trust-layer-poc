@@ -295,6 +295,11 @@ function buildFlowCardHTML(flow, idx, st) {
   const runLabel = st.status === 'running' ? '⟳ Running...' : '▶ Run';
   const runClass = st.status === 'running' ? 'run running' : 'run';
 
+  const storyHtml = flow.story ? `
+      <div class="story-block">
+        ${flow.story.map(s => `<div class="story-step"><span class="story-keyword story-kw-${s.keyword.toLowerCase()}">${s.keyword}</span> ${s.text}</div>`).join('')}
+      </div>` : `<div class="flow-desc">${flow.desc}</div>`;
+
   return `
     <div class="flow-card fade-in" id="flowCard${idx}">
       <div class="flow-card-top">
@@ -303,7 +308,7 @@ function buildFlowCardHTML(flow, idx, st) {
         <span class="flow-duration">${durationText}</span>
         ${resultBadge}
       </div>
-      <div class="flow-desc">${flow.desc}</div>
+      ${storyHtml}
       <div class="flow-tags">
         ${flow.tags.map(t => `<span class="flow-tag">${t}</span>`).join('')}
       </div>
@@ -318,7 +323,7 @@ function buildFlowCardHTML(flow, idx, st) {
         </button>
         <button class="flow-action-btn code" onclick="openCode(${idx})">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-          View Source Code
+          View Test Code
         </button>
       </div>
     </div>
@@ -377,6 +382,123 @@ function openVisualize(idx) {
   document.getElementById('visModal').classList.add('active');
 }
 
+function getStepMockup(step) {
+  const url = step.url || '';
+  // Catalog page with filters
+  if (url.includes('/catalog') && url.includes('cat=')) {
+    const cat = (url.match(/cat=([^&]+)/) || [])[1] || 'all';
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <div style="flex:1;background:#f5f5f5;border:2px solid #4F46E5;border-radius:6px;padding:8px 12px;font-size:12px;color:#666">🔍 ${url.includes('q=') ? (url.match(/q=([^&]+)/) || [])[1] || '' : 'Search tools...'}</div>
+          <div style="background:#4F46E5;color:#fff;padding:8px 12px;border-radius:6px;font-size:11px;font-weight:700">${cat.replace(/-/g,' ').toUpperCase()}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;margin-bottom:4px">🔩</div><div style="font-size:11px;font-weight:600">Cordless Drill</div><span style="font-size:9px;color:#22c55e;font-weight:700">Available</span></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;text-align:center"><div style="font-size:24px;margin-bottom:4px">🪚</div><div style="font-size:11px;font-weight:600">Circular Saw</div><span style="font-size:9px;color:#ef4444;font-weight:700">High Risk</span></div>
+        </div>
+      </div>`;
+  }
+  // Tool detail page
+  if (url.includes('/catalog/')) {
+    const toolName = (url.split('/catalog/')[1] || 'tool').replace(/-/g, ' ');
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <div style="width:100px;height:100px;background:#f5f5f5;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:40px;flex-shrink:0">🔩</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;text-transform:capitalize;margin-bottom:4px">${toolName}</div>
+            <span style="font-size:10px;font-weight:700;color:#f97316;letter-spacing:1px">POWER TOOLS</span>
+            <div style="font-size:11px;color:#666;margin-top:6px;line-height:1.4">20V MAX cordless drill driver with brushless motor, 2-speed gearbox.</div>
+            <span style="display:inline-block;margin-top:8px;background:#22c55e;color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px">✓ Available</span>
+          </div>
+        </div>
+        <button style="margin-top:14px;width:100%;background:#4F46E5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📅 Book This Tool</button>
+      </div>`;
+  }
+  // Booking / request pages
+  if (url.includes('/book') || url.includes('/request') || url.includes('borrow')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">📅 Book Tool</div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:12px;margin-bottom:10px">
+          <div style="font-size:11px;color:#888;margin-bottom:8px">Select pickup date</div>
+          <div style="display:flex;gap:6px">
+            <span style="padding:6px 10px;border-radius:6px;font-size:11px;background:#e5e7eb;color:#333">Today</span>
+            <span style="padding:6px 10px;border-radius:6px;font-size:11px;background:#4F46E5;color:#fff;font-weight:700">Tomorrow</span>
+            <span style="padding:6px 10px;border-radius:6px;font-size:11px;background:#e5e7eb;color:#333">Feb 12</span>
+          </div>
+        </div>
+        <button style="width:100%;background:#4F46E5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700">Confirm Request</button>
+      </div>`;
+  }
+  // Dashboard / loans
+  if (url.includes('/dashboard') || url.includes('/loans')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">My Active Loans</div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🔩</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">Cordless Drill</div><div style="font-size:10px;color:#888">Due: Feb 15, 2026</div></div>
+          <button style="background:#7c3aed;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:10px;font-weight:700">Return</button>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:20px">🔨</span>
+          <div style="flex:1"><div style="font-size:12px;font-weight:600">Claw Hammer</div><div style="font-size:10px;color:#888">Due: Feb 20, 2026</div></div>
+          <button style="background:#7c3aed;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:10px;font-weight:700">Return</button>
+        </div>
+      </div>`;
+  }
+  // Admin pages
+  if (url.includes('/admin')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">🛡️ Admin Dashboard</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#16a34a">12</div><div style="font-size:10px;color:#888">Pending</div></div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:900;color:#dc2626">3</div><div style="font-size:10px;color:#888">Overdue</div></div>
+        </div>
+        <div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px;font-size:11px;color:#666">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-weight:600;color:#333">Recent Request</span><span style="color:#f97316">Pending</span></div>
+          <div>John D. → Cordless Drill · Feb 10</div>
+        </div>
+      </div>`;
+  }
+  // Catalog main page
+  if (url.includes('/catalog')) {
+    return `
+      <div style="font-family:system-ui;padding:12px">
+        <div style="text-align:center;margin-bottom:12px"><div style="font-size:16px;font-weight:800">Tool Catalog</div><div style="font-size:11px;color:#888">Browse our complete collection</div></div>
+        <div style="background:#f5f5f5;border-radius:6px;padding:8px 12px;font-size:12px;color:#999;margin-bottom:10px">🔍 Search tools...</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px">🔩</div><div style="font-size:9px;font-weight:600;margin-top:2px">Drill</div></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px">🪚</div><div style="font-size:9px;font-weight:600;margin-top:2px">Saw</div></div>
+          <div style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:8px;text-align:center"><div style="font-size:18px">🔧</div><div style="font-size:9px;font-weight:600;margin-top:2px">Sander</div></div>
+        </div>
+      </div>`;
+  }
+  // Home / registration / generic
+  if (url.includes('/register') || url.includes('/signup')) {
+    return `
+      <div style="font-family:system-ui;padding:12px;text-align:center">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px">Create Account</div>
+        <div style="text-align:left;display:flex;flex-direction:column;gap:8px">
+          <div><div style="font-size:10px;color:#888;margin-bottom:2px">Name</div><div style="background:#f5f5f5;border:1px solid #e5e7eb;border-radius:6px;padding:8px;font-size:11px;color:#333">John Doe</div></div>
+          <div><div style="font-size:10px;color:#888;margin-bottom:2px">Email</div><div style="background:#f5f5f5;border:1px solid #e5e7eb;border-radius:6px;padding:8px;font-size:11px;color:#333">john@example.com</div></div>
+        </div>
+        <button style="margin-top:12px;width:100%;background:#4F46E5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700">Sign Up</button>
+      </div>`;
+  }
+  // Default: home page
+  return `
+    <div style="font-family:system-ui;padding:12px;text-align:center">
+      <div style="font-size:10px;letter-spacing:2px;color:#f97316;font-weight:700;margin-bottom:8px">TOOLSHARE</div>
+      <div style="font-size:16px;font-weight:800;margin-bottom:6px">SHARE TOOLS.<br>BUILD FUTURE.</div>
+      <div style="font-size:11px;color:#888;margin-bottom:12px">Access professional-grade equipment</div>
+      <button style="background:#f97316;color:#000;border:none;padding:8px 20px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">BROWSE CATALOG →</button>
+    </div>`;
+}
+
 function renderVisStep() {
   const flow = FLOWS[visFlowIdx];
   const step = flow.steps[visStepIdx];
@@ -386,13 +508,18 @@ function renderVisStep() {
   const viewport = document.getElementById('visStepContent');
   const isLast = visStepIdx === flow.steps.length - 1;
 
+  const mockupHtml = getStepMockup(step);
+
   viewport.innerHTML = `
-    <div class="vis-step-num">Step ${visStepIdx + 1} of ${flow.steps.length}</div>
-    <div class="vis-step-action">${step.action}</div>
-    <div class="vis-step-detail">${step.detail}</div>
-    ${!isLast ? '<div class="vis-click-indicator"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2"><path d="M6 3l14 9-14 9V3z"/></svg></div>' : '<div style="margin-top:16px;font-size:24px">✅</div>'}
+    <div class="vis-mockup">${mockupHtml}</div>
+    <div class="vis-step-overlay">
+      <div class="vis-step-num">Step ${visStepIdx + 1} of ${flow.steps.length}</div>
+      <div class="vis-step-action">${step.action}</div>
+      <div class="vis-step-detail">${step.detail}</div>
+      ${isLast ? '<div style="margin-top:10px;font-size:20px">✅</div>' : ''}
+    </div>
   `;
-  viewport.parentElement.style.background = isLast ? '#F0FFF4' : '#FAF8F5';
+  viewport.parentElement.style.background = '#FAF8F5';
 
   // Dots
   const dotsContainer = document.getElementById('visStepDots');
@@ -419,12 +546,291 @@ function visPrev() {
   }
 }
 
-// ─── CODE MODAL ───
+// ─── CODE MODAL (Split View + Version Control + Diff) ───
+let codeModalFlowIdx = null;
+let codeModalVersionIdx = currentVersionIdx;
+let codeModalDiffActive = false;
+
+function getFlowCodeForVersion(flowId, versionIdx) {
+  const history = FLOW_CODE_HISTORY[flowId];
+  if (history) {
+    for (const entry of history) {
+      if (versionIdx <= entry.upToVersion) return entry.code;
+    }
+  }
+  const flow = FLOWS.find(f => f.id === flowId);
+  return flow ? flow.code : '';
+}
+
+function hasCodeChangedAtVersion(flowId, versionIdx) {
+  if (versionIdx === 0) return false;
+  return getFlowCodeForVersion(flowId, versionIdx) !== getFlowCodeForVersion(flowId, versionIdx - 1);
+}
+
 function openCode(idx) {
+  codeModalFlowIdx = idx;
+  codeModalVersionIdx = currentVersionIdx;
+  codeModalDiffActive = false;
+
   const flow = FLOWS[idx];
   document.getElementById('codeFilePath').textContent = `tests/flows/${flow.id}.spec.ts`;
-  document.getElementById('codeBody').innerHTML = `<div class="code-block">${highlightTS(flow.code)}</div>`;
+
+  renderCodeModalContent();
+  updateCodeModalVcUI();
+
+  // Footer context
+  const contextEl = document.getElementById('codeRegenContext');
+  if (flow.story) {
+    contextEl.innerHTML = `<span class="regen-context-label">Source:</span> BDD story (${flow.story.length} steps) + current implementation`;
+  } else {
+    contextEl.innerHTML = `<span class="regen-context-label">Source:</span> Flow definition + current implementation`;
+  }
+
+  // Reset regenerate button
+  const btn = document.getElementById('codeRegenBtn');
+  btn.classList.remove('regenerating', 'done');
+  btn.disabled = false;
+  btn.querySelector('.regen-label').textContent = 'Regenerate Test Code';
+
   document.getElementById('codeModal').classList.add('active');
+}
+
+function renderCodeModalContent() {
+  const flow = FLOWS[codeModalFlowIdx];
+  const storyPane = document.getElementById('codeStoryPane');
+  const rightPane = document.getElementById('codeRightPane');
+
+  // Resolve flow change metadata for highlighting
+  let flowChange = null;
+  if (codeModalDiffActive && hasCodeChangedAtVersion(flow.id, codeModalVersionIdx)) {
+    const v = VERSIONS[codeModalVersionIdx];
+    flowChange = (v.flowChanges || []).find(fc => fc.flowId === flow.id);
+  }
+  const changedStorySet = new Set(flowChange?.changedStoryIndices || []);
+  const changedStepSet = new Set(flowChange?.changedStepIndices || []);
+
+  let storyHtml = '';
+
+  // ── Change info block (above User Story when diff is active) ──
+  if (flowChange) {
+    const v = VERSIONS[codeModalVersionIdx];
+    storyHtml += `<div class="code-change-info">
+      <h4>Changes in this version</h4>
+      <div class="code-change-desc">${flowChange.desc}</div>
+      <div class="code-change-version">${v.label} · ${v.date}</div>
+    </div>`;
+  }
+
+  // ── BDD Story ──
+  storyHtml += '<div class="code-story-header"><h4>User Story</h4></div>';
+  if (flow.story) {
+    storyHtml += '<div class="story-block" style="margin-bottom:20px">';
+    storyHtml += flow.story.map((s, i) => {
+      const hl = changedStorySet.has(i) ? ' story-step-changed' : '';
+      return `<div class="story-step${hl}"><span class="story-keyword story-kw-${s.keyword.toLowerCase()}">${s.keyword}</span> ${s.text}</div>`;
+    }).join('');
+    storyHtml += '</div>';
+  }
+
+  // ── Test Steps ──
+  storyHtml += '<div class="code-story-header"><h4>Test Steps</h4></div>';
+  storyHtml += '<div class="code-test-steps">';
+  flow.steps.forEach((step, i) => {
+    const hl = changedStepSet.has(i) ? ' code-test-step-changed' : '';
+    storyHtml += `<div class="code-test-step${hl}">
+      <span class="code-step-num">${i + 1}</span>
+      <div>
+        <div class="code-step-action">${step.action}</div>
+        <div class="code-step-detail">${step.detail}</div>
+      </div>
+    </div>`;
+  });
+  storyHtml += '</div>';
+
+  storyPane.innerHTML = storyHtml;
+
+  // ── Right pane: Code or Diff ──
+  if (codeModalDiffActive && codeModalVersionIdx > 0) {
+    const oldCode = getFlowCodeForVersion(flow.id, codeModalVersionIdx - 1);
+    const newCode = getFlowCodeForVersion(flow.id, codeModalVersionIdx);
+    const diff = computeLineDiff(oldCode, newCode);
+    rightPane.innerHTML = renderDiffView(diff);
+  } else {
+    const code = getFlowCodeForVersion(flow.id, codeModalVersionIdx);
+    rightPane.innerHTML = `<div class="code-block">${highlightTS(code)}</div>`;
+  }
+}
+
+function updateCodeModalVcUI() {
+  const v = VERSIONS[codeModalVersionIdx];
+  document.getElementById('codeVcHash').textContent = v.hash;
+  document.getElementById('codeVcDate').textContent =
+    codeModalVersionIdx === VERSIONS.length - 1 ? '· latest' : '· ' + v.date;
+  document.getElementById('codeVcPrev').disabled = codeModalVersionIdx === 0;
+  document.getElementById('codeVcNext').disabled = codeModalVersionIdx === VERSIONS.length - 1;
+
+  // Show/hide diff toggle based on whether code actually changed at this version
+  const flow = FLOWS[codeModalFlowIdx];
+  const hasChanges = hasCodeChangedAtVersion(flow.id, codeModalVersionIdx);
+  const diffToggle = document.getElementById('codeDiffToggle');
+  diffToggle.style.display = hasChanges ? '' : 'none';
+  diffToggle.classList.toggle('active', codeModalDiffActive && hasChanges);
+  document.getElementById('codeDiffLabel').textContent =
+    codeModalDiffActive && hasChanges ? 'Showing Changes' : 'Show Changes';
+}
+
+function codeModalVcPrev() {
+  if (codeModalVersionIdx > 0) {
+    codeModalVersionIdx--;
+    codeModalDiffActive = false;
+    renderCodeModalContent();
+    updateCodeModalVcUI();
+  }
+}
+
+function codeModalVcNext() {
+  if (codeModalVersionIdx < VERSIONS.length - 1) {
+    codeModalVersionIdx++;
+    codeModalDiffActive = false;
+    renderCodeModalContent();
+    updateCodeModalVcUI();
+  }
+}
+
+function toggleCodeDiff() {
+  codeModalDiffActive = !codeModalDiffActive;
+  renderCodeModalContent();
+  updateCodeModalVcUI();
+}
+
+// ─── LINE DIFF (LCS-based) ───
+function computeLineDiff(oldCode, newCode) {
+  const oldLines = oldCode.split('\n');
+  const newLines = newCode.split('\n');
+  const n = oldLines.length;
+  const m = newLines.length;
+
+  // Build LCS table
+  const dp = [];
+  for (let i = 0; i <= n; i++) {
+    dp[i] = new Array(m + 1).fill(0);
+  }
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      if (oldLines[i - 1] === newLines[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  // Backtrack to produce diff entries
+  const result = [];
+  let i = n, j = m;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
+      result.unshift({ type: 'context', content: oldLines[i - 1], oldNum: i, newNum: j });
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      result.unshift({ type: 'added', content: newLines[j - 1], newNum: j });
+      j--;
+    } else {
+      result.unshift({ type: 'removed', content: oldLines[i - 1], oldNum: i });
+      i--;
+    }
+  }
+
+  return result;
+}
+
+function renderDiffView(diff) {
+  const addedCount = diff.filter(d => d.type === 'added').length;
+  const removedCount = diff.filter(d => d.type === 'removed').length;
+
+  let html = `<div class="diff-summary">
+    <span class="diff-stat-added">+${addedCount} added</span>
+    <span class="diff-stat-removed">\u2212${removedCount} removed</span>
+  </div>`;
+
+  html += '<div class="diff-view">';
+  diff.forEach(entry => {
+    const cls = entry.type === 'added' ? 'diff-added' : entry.type === 'removed' ? 'diff-removed' : '';
+    const marker = entry.type === 'added' ? '+' : entry.type === 'removed' ? '\u2212' : ' ';
+    const oldNum = entry.oldNum != null ? entry.oldNum : '';
+    const newNum = entry.newNum != null ? entry.newNum : '';
+    const highlighted = highlightTSLine(entry.content);
+
+    html += `<div class="diff-line ${cls}">`;
+    html += `<span class="diff-num">${oldNum}</span>`;
+    html += `<span class="diff-num">${newNum}</span>`;
+    html += `<span class="diff-marker">${marker}</span>`;
+    html += `<span class="diff-content">${highlighted}</span>`;
+    html += '</div>';
+  });
+  html += '</div>';
+
+  return html;
+}
+
+// Highlight a single TS line (for diff view, without wrapping in .code-line)
+function highlightTSLine(line) {
+  let hl = escapeHtml(line);
+  hl = hl.replace(/\b(import|from|export|const|let|var|async|await|function|return|if|else|for|of|new|test|expect)\b/g, '<span class="hl-kw">$1</span>');
+  hl = hl.replace(/(&#x27;[^&#]*?&#x27;|'[^']*?')/g, '<span class="hl-str">$1</span>');
+  hl = hl.replace(/(`[^`]*?`)/g, '<span class="hl-str">$1</span>');
+  hl = hl.replace(/(\/\/.*)/g, '<span class="hl-cm">$1</span>');
+  hl = hl.replace(/\b(\d+)\b/g, '<span class="hl-num">$1</span>');
+  hl = hl.replace(/\.(\w+)\(/g, '.<span class="hl-fn">$1</span>(');
+  hl = hl.replace(/test\.describe/g, '<span class="hl-kw">test</span>.<span class="hl-fn">describe</span>');
+  return hl;
+}
+
+function regenerateCode() {
+  if (codeModalFlowIdx === null) return;
+  const btn = document.getElementById('codeRegenBtn');
+  if (btn.classList.contains('regenerating')) return;
+
+  // Switch to latest version, turn off diff
+  codeModalVersionIdx = VERSIONS.length - 1;
+  codeModalDiffActive = false;
+  updateCodeModalVcUI();
+  renderCodeModalContent();
+
+  btn.classList.add('regenerating');
+  btn.disabled = true;
+  btn.querySelector('.regen-label').textContent = 'Analyzing BDD story...';
+
+  const rightPane = document.getElementById('codeRightPane');
+
+  // Phase 1
+  setTimeout(() => {
+    btn.querySelector('.regen-label').textContent = 'Mapping to implementation...';
+  }, 800);
+
+  // Phase 2: shimmer
+  setTimeout(() => {
+    btn.querySelector('.regen-label').textContent = 'Generating Playwright code...';
+    rightPane.querySelectorAll('.code-line').forEach((line, i) => {
+      setTimeout(() => line.classList.add('code-line-regen'), i * 30);
+    });
+  }, 1600);
+
+  // Phase 3: done
+  setTimeout(() => {
+    const flow = FLOWS[codeModalFlowIdx];
+    rightPane.innerHTML = `<div class="code-block code-block-fresh">${highlightTS(flow.code)}</div>`;
+
+    btn.classList.remove('regenerating');
+    btn.classList.add('done');
+    btn.querySelector('.regen-label').textContent = 'Code regenerated';
+
+    setTimeout(() => {
+      btn.classList.remove('done');
+      btn.disabled = false;
+      btn.querySelector('.regen-label').textContent = 'Regenerate Test Code';
+    }, 2000);
+  }, 2800);
 }
 
 function highlightTS(code) {
@@ -476,42 +882,36 @@ document.addEventListener('click', e => {
 });
 
 // ─── EDITOR TAB SWITCHING ───
-function switchEditorTab(tab) {
-  const tabs = document.querySelectorAll('.tab-group .tab-item');
-  tabs.forEach(t => {
-    t.classList.remove('active');
-    if (t.textContent.trim().toLowerCase() === tab) t.classList.add('active');
-  });
+let currentAdvancedSubTab = 'flows';
+
+function switchEditorTab(tab, e) {
+  // Update top-bar tab buttons
+  document.querySelectorAll('.tab-group .tab-item').forEach(t => t.classList.remove('active'));
+  if (e && e.target) e.target.classList.add('active');
 
   const chatPanel = document.getElementById('chatPanel');
   const previewArea = document.querySelector('.preview-area');
-  const codeView = document.getElementById('codeEditorView');
-  const flowsPage = document.getElementById('flowsPage');
-  const sitePreview = document.getElementById('sitePreview');
-  const pageBar = document.getElementById('pageBar');
+  const advancedView = document.getElementById('advancedView');
 
-  const codeContent = document.getElementById('codeContent');
-  const flowsCode = document.getElementById('flowsPageCode');
+  // Hide all panels first
+  previewArea.style.display = 'none';
+  advancedView.classList.remove('active');
 
-  if (tab === 'code') {
-    chatPanel.style.display = 'none';
-    previewArea.style.display = 'none';
-    codeView.classList.add('active');
-    // Reset code view to show code (not flows)
-    codeContent.style.display = 'flex';
-    flowsCode.style.display = 'none';
-    if (!document.getElementById('codeEditArea').innerHTML) renderCodeContent();
+  // Chat panel always visible
+  chatPanel.style.display = '';
+
+  if (tab === 'advanced') {
+    advancedView.classList.add('active');
+    switchAdvancedSubTab(currentAdvancedSubTab);
     initVersionTimeline();
   } else {
-    chatPanel.style.display = '';
+    // Site or Dashboard — show preview area
     previewArea.style.display = '';
-    codeView.classList.remove('active');
-    // Restore correct page view
-    flowsPage.classList.remove('active');
-    sitePreview.style.display = 'block';
-    // Show the right page based on currentPage
+    // Restore correct page based on currentPage
     const siteHome = document.getElementById('siteHome');
     const siteCatalog = document.getElementById('siteCatalog');
+    const sitePreview = document.getElementById('sitePreview');
+    sitePreview.style.display = 'block';
     if (currentPage === 'Catalog') {
       siteHome.style.display = 'none';
       siteCatalog.classList.add('active');
@@ -522,6 +922,217 @@ function switchEditorTab(tab) {
   }
 }
 
+// ─── ADVANCED SUB-TAB SWITCHING ───
+function switchAdvancedSubTab(subTab, e) {
+  currentAdvancedSubTab = subTab;
+
+  // Update sub-tab buttons
+  document.querySelectorAll('.adv-tab').forEach(t => t.classList.remove('active'));
+  if (e && e.target) {
+    e.target.closest('.adv-tab').classList.add('active');
+  } else {
+    // Programmatic call — first tab is flows/insights, second is code
+    const tabs = document.querySelectorAll('.adv-tab');
+    const targetIdx = subTab === 'flows' ? 0 : 1;
+    if (tabs[targetIdx]) tabs[targetIdx].classList.add('active');
+  }
+
+  const flowsPage = document.getElementById('flowsPage');
+  const codeView = document.getElementById('codeEditorView');
+
+  if (subTab === 'flows') {
+    flowsPage.classList.add('active');
+    codeView.classList.remove('active');
+    if (!flowsPage._rendered) {
+      renderFlowsPage('flowsPage');
+      flowsPage._rendered = true;
+    }
+  } else {
+    flowsPage.classList.remove('active');
+    codeView.classList.add('active');
+    const codeArea = document.getElementById('codeEditArea');
+    if (codeArea && !codeArea._rendered) {
+      renderCodeContent();
+      codeArea._rendered = true;
+    }
+  }
+}
+
+// ─── RENDER FLOWS PAGE ───
+function renderFlowsPage(targetId) {
+  const container = document.getElementById(targetId || 'flowsPage');
+  const totalPassed = flowStates.filter(s => s.result === 'passed').length;
+  const totalFailed = flowStates.filter(s => s.result === 'failed').length;
+  const totalNotRun = flowStates.filter(s => s.status === 'idle').length;
+
+  let html = `
+    <div class="flows-header fade-in">
+      <div>
+        <div class="flows-title">Product Flows</div>
+        <div class="flows-subtitle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Auto-detected from your prompt and code architecture
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Menu -->
+    <div class="flows-tab-menu fade-in">
+      <button class="flows-tab active" onclick="switchFlowsTab('testcases', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        User Stories
+        <span class="tab-count">${FLOWS.length}</span>
+      </button>
+      <button class="flows-tab" onclick="switchFlowsTab('userflows', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        User Flows
+        <span class="tab-count">3</span>
+      </button>
+      <button class="flows-tab" onclick="switchFlowsTab('widgets', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Widget Library
+        <span class="tab-count">${WIDGETS.length}</span>
+      </button>
+    </div>
+
+    <!-- Test Cases Tab -->
+    <div class="flows-tab-content active" id="tab-testcases">
+      <div class="flows-stats fade-in" id="flowStats" style="display:flex;gap:16px;margin-bottom:24px">
+        <div class="stat-card"><div class="stat-value">${FLOWS.length}</div><div class="stat-label">Total Flows</div></div>
+        <div class="stat-card passed"><div class="stat-value" id="statPassed">${totalPassed}</div><div class="stat-label">Passed</div></div>
+        <div class="stat-card failed"><div class="stat-value" id="statFailed">${totalFailed}</div><div class="stat-label">Failed</div></div>
+        <div class="stat-card"><div class="stat-value" id="statPending">${totalNotRun}</div><div class="stat-label">Not Run</div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+        <button class="btn-run-all" onclick="runAllFlows()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          Run All
+        </button>
+      </div>
+  `;
+
+  FLOWS.forEach((flow, idx) => {
+    const st = flowStates[idx];
+    html += buildFlowCardHTML(flow, idx, st);
+  });
+
+  html += `</div><!-- /tab-testcases -->`;
+
+  // User Flows Tab
+  html += buildUserFlowsTab();
+
+  // Widget Library Tab
+  html += buildWidgetLibraryTab();
+
+  container.innerHTML = html;
+}
+
+// ─── USER FLOWS TAB ───
+function buildUserFlowsTab() {
+  return `
+    <div class="flows-tab-content" id="tab-userflows">
+      <div class="uf-intro">
+        <strong>Interactive Site Map</strong> — auto-generated from your code architecture. Click any page node to drill down into its components and CTAs. Drag to pan, scroll to zoom.
+      </div>
+
+      <div class="flow-canvas-wrap" id="flowCanvasWrap">
+        <div class="canvas-grid"></div>
+        <svg class="flow-svg" id="flowSvg">
+          <defs>
+            <marker id="arrowM" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" class="arrow-head"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="flow-canvas" id="flowCanvas">
+          <!-- Nodes are rendered by JS -->
+        </div>
+        <div class="canvas-controls">
+          <button class="canvas-ctrl" onclick="canvasZoom(-.15)" title="Zoom out">−</button>
+          <div class="canvas-zoom-label" id="canvasZoomLabel">100%</div>
+          <button class="canvas-ctrl" onclick="canvasZoom(.15)" title="Zoom in">+</button>
+          <button class="canvas-ctrl" onclick="canvasReset()" title="Reset view">⌂</button>
+        </div>
+      </div>
+    </div><!-- /tab-userflows -->
+  `;
+}
+
+// ─── WIDGET LIBRARY TAB ───
+function buildWidgetLibraryTab() {
+  const categories = [...new Set(WIDGETS.map(w => w.category))];
+  let html = `
+    <div class="flows-tab-content" id="tab-widgets">
+      <div class="widget-lib-intro">
+        <strong>Component Library</strong> — all UI widgets detected in your generated site. Click any widget to inspect its props and interact with a live preview.
+      </div>
+
+      <div class="widget-categories">
+        <button class="widget-cat-btn active" onclick="filterWidgets('all', this)">All <span class="tab-count">${WIDGETS.length}</span></button>
+        ${categories.map(cat => {
+          const count = WIDGETS.filter(w => w.category === cat).length;
+          return `<button class="widget-cat-btn" onclick="filterWidgets('${cat}', this)">${cat} <span class="tab-count">${count}</span></button>`;
+        }).join('')}
+      </div>
+
+      <div class="widget-grid" id="widgetGrid">
+  `;
+
+  WIDGETS.forEach((widget, idx) => {
+    // Generate default preview using render()
+    const defaultProps = {};
+    widget.props.forEach(p => { defaultProps[p.name] = p.default; });
+    const previewHtml = widget.render ? widget.render(defaultProps) : '';
+
+    html += `
+        <div class="widget-card fade-in" data-category="${widget.category}" id="widgetCard${idx}" onclick="expandWidget(${idx})">
+          <div class="widget-card-preview">
+            ${previewHtml}
+          </div>
+          <div class="widget-card-info">
+            <span class="widget-icon">${widget.icon}</span>
+            <div class="widget-card-meta">
+              <div class="widget-card-name">${widget.name}</div>
+              <span class="widget-card-cat">${widget.category}</span>
+            </div>
+          </div>
+        </div>
+    `;
+  });
+
+  html += `
+      </div><!-- /widget-grid -->
+
+      <!-- Expanded widget detail: Storybook-style two-column layout -->
+      <div class="widget-detail sb-layout" id="widgetDetail" style="display:none">
+        <div class="sb-preview-pane">
+          <button class="widget-detail-back" onclick="closeWidgetDetail()">← Back to Library</button>
+          <div class="widget-detail-header">
+            <span class="widget-detail-icon" id="wdIcon"></span>
+            <div>
+              <h3 class="widget-detail-name" id="wdName"></h3>
+              <span class="widget-detail-cat" id="wdCat"></span>
+            </div>
+          </div>
+          <p class="widget-detail-desc" id="wdDesc"></p>
+          <div class="widget-detail-section">
+            <h4>Live Preview</h4>
+            <div class="widget-detail-preview" id="wdPreview"></div>
+          </div>
+        </div>
+        <div class="sb-controls-pane">
+          <h4 class="sb-controls-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg>
+            Controls
+          </h4>
+          <div class="widget-detail-props sb-controls" id="wdProps"></div>
+        </div>
+      </div>
+    </div><!-- /tab-widgets -->
+  `;
+  return html;
+}
+
 // ─── FLOWS TAB SWITCHING ───
 function switchFlowsTab(tab, btn) {
   // Update tab buttons
@@ -530,7 +1141,7 @@ function switchFlowsTab(tab, btn) {
   btn.classList.add('active');
 
   // Update tab content
-  const container = btn.closest('.flows-page, #flowsPageCode, [id^="flowsPage"]') || btn.closest('[style*="overflow"]');
+  const container = btn.closest('.flows-page, [id^="flowsPage"]') || btn.closest('[style*="overflow"]');
   let parent = btn.parentElement.parentElement;
   parent.querySelectorAll('.flows-tab-content').forEach(c => c.classList.remove('active'));
   const target = parent.querySelector('#tab-' + tab);
@@ -573,12 +1184,15 @@ function updateVcUI() {
   document.getElementById('vcPrevBtn').disabled = currentVersionIdx === 0;
   document.getElementById('vcNextBtn').disabled = currentVersionIdx === VERSIONS.length - 1;
 
-  // Update diff count
+  // Update diff count — include all pillar changes
   const dc = document.getElementById('vcDiffCount');
-  if (v.changes.length > 0) {
+  const canvasChanges = (v.changes || []).length;
+  const widgetChanges = (v.widgetChanges || []).length;
+  const flowChanges = (v.flowChanges || []).length;
+  const totalChanges = canvasChanges + widgetChanges + flowChanges;
+  if (totalChanges > 0) {
     dc.style.display = '';
-    const totalDiffs = v.diffs ? v.diffs.length : 0;
-    dc.textContent = totalDiffs + ' change' + (totalDiffs !== 1 ? 's' : '');
+    dc.textContent = totalChanges + ' change' + (totalChanges !== 1 ? 's' : '');
   } else {
     dc.style.display = 'none';
   }
@@ -608,8 +1222,10 @@ function updateVcUI() {
     if (compareBtn) compareBtn.style.display = 'none';
   }
 
-  // Apply diffs to user flows tree if visible
+  // Apply diffs across all pillars
   applyDiffsToTree();
+  applyWidgetDiffs();
+  applyFlowDiffs();
 }
 
 function goToVersion(idx) {
@@ -718,6 +1334,67 @@ function applyCanvasVCS() {
   v.changes.forEach(change => {
     const node = document.getElementById(change.nodeId);
     if (node) node.classList.add('vcs-' + change.type);
+  });
+}
+
+// ─── WIDGET DIFFS ───
+function applyWidgetDiffs() {
+  // Clear all widget diff highlights
+  document.querySelectorAll('.widget-card').forEach(card => {
+    card.classList.remove('diff-added', 'diff-removed', 'diff-modified');
+    const badge = card.querySelector('.widget-diff-badge');
+    if (badge) badge.remove();
+  });
+
+  const v = VERSIONS[currentVersionIdx];
+  if (!v.widgetChanges || v.widgetChanges.length === 0) return;
+
+  v.widgetChanges.forEach(change => {
+    // Find widget card by matching widget id
+    const widgetIdx = WIDGETS.findIndex(w => w.id === change.widgetId);
+    if (widgetIdx === -1) return;
+    const card = document.getElementById(`widgetCard${widgetIdx}`);
+    if (!card) return;
+
+    card.classList.add('diff-' + change.type);
+
+    // Add diff badge
+    const badge = document.createElement('div');
+    badge.className = `widget-diff-badge diff-badge-${change.type}`;
+    badge.textContent = change.type.charAt(0).toUpperCase() + change.type.slice(1);
+    badge.title = change.desc;
+    card.querySelector('.widget-card-info').appendChild(badge);
+  });
+}
+
+// ─── FLOW / TEST CASE DIFFS ───
+function applyFlowDiffs() {
+  // Clear all flow diff highlights
+  document.querySelectorAll('.flow-card').forEach(card => {
+    card.classList.remove('diff-added', 'diff-removed', 'diff-modified');
+    const badge = card.querySelector('.flow-diff-badge');
+    if (badge) badge.remove();
+  });
+
+  const v = VERSIONS[currentVersionIdx];
+  if (!v.flowChanges || v.flowChanges.length === 0) return;
+
+  v.flowChanges.forEach(change => {
+    // Find flow card by matching flow id
+    const flowIdx = FLOWS.findIndex(f => f.id === change.flowId);
+    if (flowIdx === -1) return;
+    const card = document.getElementById(`flowCard${flowIdx}`);
+    if (!card) return;
+
+    card.classList.add('diff-' + change.type);
+
+    // Add diff badge
+    const badge = document.createElement('div');
+    badge.className = `flow-diff-badge diff-badge-${change.type}`;
+    badge.textContent = change.type.charAt(0).toUpperCase() + change.type.slice(1);
+    badge.title = change.desc;
+    const top = card.querySelector('.flow-card-top');
+    if (top) top.appendChild(badge);
   });
 }
 
@@ -1040,6 +1717,135 @@ export default function HomePage() {
   }).join('');
 }
 
+// ─── WIDGET LIBRARY ───
+let currentWidgetIdx = null;
+
+function expandWidget(idx) {
+  const widget = WIDGETS[idx];
+  if (!widget) return;
+  currentWidgetIdx = idx;
+
+  const grid = document.getElementById('widgetGrid');
+  const detail = document.getElementById('widgetDetail');
+  const cats = document.querySelector('.widget-categories');
+  if (!grid || !detail) return;
+
+  grid.style.display = 'none';
+  if (cats) cats.style.display = 'none';
+  detail.style.display = 'flex';
+
+  document.getElementById('wdIcon').textContent = widget.icon;
+  document.getElementById('wdName').textContent = widget.name;
+  document.getElementById('wdCat').textContent = widget.category;
+  document.getElementById('wdDesc').textContent = widget.description;
+
+  // Build controls panel
+  const propsEl = document.getElementById('wdProps');
+  propsEl.innerHTML = widget.props.map((p, pi) => {
+    if (p.type === 'color') {
+      return `<div class="sb-control">
+        <label class="sb-label">${p.name}</label>
+        <div class="sb-color-row">
+          <input type="color" class="sb-color" value="${p.default}" data-prop="${pi}" oninput="updateWidgetPreview()">
+          <span class="sb-color-hex">${p.default}</span>
+        </div>
+      </div>`;
+    }
+    if (p.type === 'select') {
+      return `<div class="sb-control">
+        <label class="sb-label">${p.name}</label>
+        <select class="sb-select" data-prop="${pi}" onchange="updateWidgetPreview()">
+          ${(p.options || []).map(o => `<option value="${o}" ${o === p.default ? 'selected' : ''}>${o}</option>`).join('')}
+        </select>
+      </div>`;
+    }
+    if (p.type === 'boolean') {
+      return `<div class="sb-control sb-control-row">
+        <label class="sb-label">${p.name}</label>
+        <input type="checkbox" class="sb-toggle" data-prop="${pi}" ${p.default ? 'checked' : ''} onchange="updateWidgetPreview()">
+      </div>`;
+    }
+    // Default: text
+    return `<div class="sb-control">
+      <label class="sb-label">${p.name}</label>
+      <input type="text" class="sb-input" value="${p.default}" data-prop="${pi}" oninput="updateWidgetPreview()">
+    </div>`;
+  }).join('') + `<button class="sb-reset" onclick="resetWidgetProps()">Reset to Defaults</button>`;
+
+  // Render initial preview
+  updateWidgetPreview();
+}
+
+function updateWidgetPreview() {
+  const widget = WIDGETS[currentWidgetIdx];
+  if (!widget || !widget.render) return;
+
+  // Collect current prop values from inputs
+  const props = {};
+  widget.props.forEach((p, pi) => {
+    const input = document.querySelector(`[data-prop="${pi}"]`);
+    if (!input) { props[p.name] = p.default; return; }
+    if (p.type === 'boolean') {
+      props[p.name] = input.checked;
+    } else {
+      props[p.name] = input.value;
+    }
+    // Update color hex display
+    if (p.type === 'color') {
+      const hex = input.parentElement.querySelector('.sb-color-hex');
+      if (hex) hex.textContent = input.value;
+    }
+  });
+
+  document.getElementById('wdPreview').innerHTML = widget.render(props);
+}
+
+function resetWidgetProps() {
+  const widget = WIDGETS[currentWidgetIdx];
+  if (!widget) return;
+  widget.props.forEach((p, pi) => {
+    const input = document.querySelector(`[data-prop="${pi}"]`);
+    if (!input) return;
+    if (p.type === 'boolean') { input.checked = !!p.default; }
+    else { input.value = p.default; }
+  });
+  updateWidgetPreview();
+}
+
+function closeWidgetDetail() {
+  currentWidgetIdx = null;
+  const grid = document.getElementById('widgetGrid');
+  const detail = document.getElementById('widgetDetail');
+  const cats = document.querySelector('.widget-categories');
+  if (grid) grid.style.display = '';
+  if (cats) cats.style.display = '';
+  if (detail) detail.style.display = 'none';
+}
+
+function wizardGoToStep(stepValue) {
+  const widget = WIDGETS[currentWidgetIdx];
+  if (!widget) return;
+  const stepPropIdx = widget.props.findIndex(pr => pr.name === 'step');
+  if (stepPropIdx < 0) return;
+  const sel = document.querySelector(`[data-prop="${stepPropIdx}"]`);
+  if (sel) { sel.value = stepValue; updateWidgetPreview(); }
+}
+
+function filterWidgets(category, btn) {
+  // Update active state
+  document.querySelectorAll('.widget-cat-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const cards = document.querySelectorAll('.widget-card');
+  cards.forEach(card => {
+    if (category === 'all' || card.dataset.category === category) {
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
 // ─── NODE CONTEXT MENU ───
 let selectedNodeId = null;
 
@@ -1075,7 +1881,7 @@ function openNodeMenu(nodeId, event) {
     </div>
     <div class="node-menu-item" onclick="viewNodeTests()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-      <span>View Related Test Cases</span>
+      <span>View Related User Stories</span>
     </div>
   `;
 
@@ -1881,6 +2687,7 @@ window.startGeneration = startGeneration;
 window.togglePageDropdown = togglePageDropdown;
 window.selectPage = selectPage;
 window.switchEditorTab = switchEditorTab;
+window.switchAdvancedSubTab = switchAdvancedSubTab;
 window.switchFlowsTab = switchFlowsTab;
 window.runAllFlows = runAllFlows;
 window.runFlow = runFlow;
@@ -1891,12 +2698,21 @@ window.openVisualize = openVisualize;
 window.visNext = visNext;
 window.visPrev = visPrev;
 window.openCode = openCode;
+window.regenerateCode = regenerateCode;
+window.codeModalVcPrev = codeModalVcPrev;
+window.codeModalVcNext = codeModalVcNext;
+window.toggleCodeDiff = toggleCodeDiff;
 window.closeModal = closeModal;
 window.goToVersion = goToVersion;
 window.vcPrev = vcPrev;
 window.vcNext = vcNext;
 window.openVisualDiff = openVisualDiff;
 window.toggleTreeNode = toggleTreeNode;
+window.expandWidget = expandWidget;
+window.closeWidgetDetail = closeWidgetDetail;
+window.filterWidgets = filterWidgets;
+window.updateWidgetPreview = updateWidgetPreview;
+window.resetWidgetProps = resetWidgetProps;
 window.openNodeMenu = openNodeMenu;
 window.closeNodeMenu = closeNodeMenu;
 window.viewNodePage = viewNodePage;
