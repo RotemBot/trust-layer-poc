@@ -4,7 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a static HTML/CSS/JS prototype demonstrating the "Wix Vibe" product flows feature. It simulates a website builder interface that auto-generates E2E tests from detected product flows. The prototype is a proof-of-concept with no build system or dependencies.
+This is a proof-of-concept for a **Trust Layer** — a visualization layer over AI-generated code output that allows users to "browse" and "review" what the AI built without diving into the actual code.
+
+The demo simulates a website builder (Wix Vibe style) where AI generates a complete site from a prompt. The trust layer consists of:
+
+- **User Flow Diagrams**: Interactive canvas showing site structure, navigation, and user journeys — with diff highlighting between versions to visualize what changed across AI iterations
+- **Widget Library**: A visual library of all meaningful & compound UI pieces and their logic, enabling easy interaction and review without code
+- **User Stories**: Curated natural-language descriptions of main user flows, with dynamically generated E2E tests that update whenever flows or implementation change — users can visually run through these flows to gain confidence that core business logic hasn't broken
+
+This lets non-technical users verify AI output correctness and understand the generated application's behavior through high-level abstractions rather than code inspection.
 
 ## Running the Project
 
