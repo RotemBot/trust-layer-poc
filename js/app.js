@@ -1,0 +1,852 @@
+let canvasScale = 1, canvasPanX = 0, canvasPanY = 0, isDragging = false, dragStartX, dragStartY;
+const expandedNodes = new Set();
+
+function renderFlowCanvas() {
+  const canvas = document.getElementById('flowCanvas');
+  const svg = document.getElementById('flowSvg');
+  if (!canvas || !svg) return;
+
+  let html = '';
+
+  FLOW_NODES.forEach(n => {
+    if (n.type === 'group') {
+      html += '<div class="fn-group" id="' + n.id + '" style="left:' + n.x + 'px;top:' + n.y + 'px;width:' + n.w + 'px;height:' + n.h + 'px">'
+        + '<div class="fn-group-title">' + n.label + '</div></div>';
+      return;
+    }
+
+    const isExpanded = expandedNodes.has(n.id);
+    const clickAction = n.expandable ? " onclick=\"toggleCanvasNode('" + n.id + "')\"" : '';
+
+    if (n.type === 'diamond') {
+      html += '<div class="fn fn-diamond" id="' + n.id + '" style="left:' + n.x + 'px;top:' + n.y + 'px"' + clickAction + '>'
+        + '<div class="fn-diamond-text">' + n.label + '</div>'
+        + '<div class="fn-tooltip"><div class="fn-tooltip-file">' + (n.file||'') + '</div><div class="fn-tooltip-editor">Last edit: <span>' + (n.editor||'') + '</span></div></div>'
+        + '<span class="fn-diff-link" onclick="event.stopPropagation();openVisualDiff(currentVersionIdx,0)">👁 View change</span>'
+        + '</div>';
+      // Yes / No labels
+      html += '<div class="fn-diamond-label" style="left:' + (n.x - 24) + 'px;top:' + (n.y + 35) + 'px">Yes</div>';
+      html += '<div class="fn-diamond-label" style="left:' + (n.x + 96) + 'px;top:' + (n.y + 35) + 'px">No</div>';
+      return;
+    }
+
+    const cls = n.type === 'square' ? 'fn fn-square' : 'fn fn-rect' + (n.color ? ' ' + n.color : '') + (isExpanded ? ' expanded' : '');
+    html += '<div class="' + cls + '" id="' + n.id + '" style="left:' + n.x + 'px;top:' + n.y + 'px;' + (n.w ? 'min-width:' + n.w + 'px' : '') + '"' + clickAction + '>';
+    if (n.icon) html += '<div class="fn-icon">' + n.icon + '</div>';
+    html += '<div class="fn-label">' + n.label + '</div>';
+    if (n.expandable) html += '<div class="fn-expand">▶</div>';
+    // Tooltip
+    html += '<div class="fn-tooltip"><div class="fn-tooltip-file">' + (n.file||'') + '</div><div class="fn-tooltip-editor">Last edit: <span>' + (n.editor||'') + '</span></div></div>';
+    // Diff link
+    html += '<span class="fn-diff-link" onclick="event.stopPropagation();openVisualDiff(currentVersionIdx,0)">👁 View change</span>';
+    html += '</div>';
+
+    // Render children if expanded
+    if (n.children && isExpanded) {
+      n.children.forEach(c => {
+        const ccls = c.type === 'square' ? 'fn fn-square' : 'fn fn-rect' + (c.color ? ' ' + c.color : '');
+        html += '<div class="' + ccls + '" id="' + c.id + '" style="left:' + c.x + 'px;top:' + c.y + 'px;' + (c.w ? 'min-width:' + c.w + 'px' : '') + ';opacity:0;animation:fadeNodeIn .3s ease forwards">';
+        if (c.icon) html += '<div class="fn-icon">' + c.icon + '</div>';
+        html += '<div class="fn-label">' + c.label + '</div>';
+        html += '<div class="fn-tooltip"><div class="fn-tooltip-file">' + (c.file||'') + '</div><div class="fn-tooltip-editor">Last edit: <span>' + (c.editor||'') + '</span></div></div>';
+        html += '<span class="fn-diff-link" onclick="event.stopPropagation();openVisualDiff(currentVersionIdx,0)">👁 View change</span>';
+        html += '</div>';
+      });
+    }
+  });
+
+  canvas.innerHTML = html;
+
+  // Draw edges after layout settles
+  requestAnimationFrame(function() {
+    drawFlowEdges();
+    applyCanvasVCS();
+  });
+}
+
+function drawFlowEdges() {
+  const svg = document.getElementById('flowSvg');
+  if (!svg) return;
+  // Clear existing paths (keep defs)
+  svg.querySelectorAll('path,line').forEach(el => el.remove());
+
+  FLOW_EDGES.forEach(([fromId, toId, type]) => {
+    const fromEl = document.getElementById(fromId);
+    const toEl = document.getElementById(toId);
+    if (!fromEl || !toEl) return;
+
+    const canvas = document.getElementById('flowCanvas');
+    const cRect = canvas.parentElement.getBoundingClientRect();
+    const fRect = fromEl.getBoundingClientRect();
+    const tRect = toEl.getBoundingClientRect();
+
+    // Convert to canvas-relative coords
+    const scale = canvasScale || 1;
+    const fx = (fRect.left - cRect.left) / scale + fRect.width / (2 * scale);
+    const fy = (fRect.top - cRect.top) / scale + fRect.height / scale;
+    const tx = (tRect.left - cRect.left) / scale + tRect.width / (2 * scale);
+    const ty = (tRect.top - cRect.top) / scale;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midY = (fy + ty) / 2;
+    path.setAttribute('d', 'M ' + fx + ' ' + fy + ' C ' + fx + ' ' + midY + ', ' + tx + ' ' + midY + ', ' + tx + ' ' + ty);
+    path.setAttribute('marker-end', 'url(#arrowM)');
+    path.style.stroke = type === 'no' ? 'rgba(239,68,68,.4)' : type === 'yes' ? 'rgba(34,197,94,.3)' : '#3a3a55';
+    path.style.strokeWidth = '2';
+    path.style.fill = 'none';
+    svg.appendChild(path);
+  });
+}
+
+function toggleCanvasNode(nodeId) {
+  if (expandedNodes.has(nodeId)) {
+    expandedNodes.delete(nodeId);
+  } else {
+    expandedNodes.add(nodeId);
+  }
+  renderFlowCanvas();
+}
+
+/* Pan & zoom */
+function canvasZoom(delta) {
+  canvasScale = Math.max(0.4, Math.min(2, canvasScale + delta));
+  applyCanvasTransform();
+}
+function canvasReset() {
+  canvasScale = 1; canvasPanX = 0; canvasPanY = 0;
+  applyCanvasTransform();
+}
+function applyCanvasTransform() {
+  const c = document.getElementById('flowCanvas');
+  const s = document.getElementById('flowSvg');
+  if (c) c.style.transform = 'translate(' + canvasPanX + 'px,' + canvasPanY + 'px) scale(' + canvasScale + ')';
+  if (s) s.style.transform = 'translate(' + canvasPanX + 'px,' + canvasPanY + 'px) scale(' + canvasScale + ')';
+  const lbl = document.getElementById('canvasZoomLabel');
+  if (lbl) lbl.textContent = Math.round(canvasScale * 100) + '%';
+  // Redraw edges after transform
+  setTimeout(drawFlowEdges, 160);
+}
+
+function initCanvasPanZoom() {
+  const wrap = document.getElementById('flowCanvasWrap');
+  if (!wrap) return;
+
+  wrap.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.fn') || e.target.closest('.canvas-ctrl')) return;
+    isDragging = true;
+    dragStartX = e.clientX - canvasPanX;
+    dragStartY = e.clientY - canvasPanY;
+    wrap.style.cursor = 'grabbing';
+  });
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    canvasPanX = e.clientX - dragStartX;
+    canvasPanY = e.clientY - dragStartY;
+    applyCanvasTransform();
+  });
+  document.addEventListener('mouseup', function() {
+    isDragging = false;
+    const wrap = document.getElementById('flowCanvasWrap');
+    if (wrap) wrap.style.cursor = 'grab';
+  });
+  wrap.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    canvasZoom(e.deltaY < 0 ? 0.08 : -0.08);
+  }, { passive: false });
+}
+
+function buildFlowCardHTML(flow, idx, st) {
+  const statusClass = st.result || (st.status === 'running' ? 'running' : '');
+  const durationText = st.duration ? `${st.duration}ms` : '';
+  const resultBadge = st.result ? `<span class="flow-result-badge ${st.result}">${st.result === 'passed' ? '✓ Passed' : '✗ Failed'}</span>` : '';
+  const runLabel = st.status === 'running' ? '⟳ Running...' : '▶ Run';
+  const runClass = st.status === 'running' ? 'run running' : 'run';
+
+  return `
+    <div class="flow-card fade-in" id="flowCard${idx}">
+      <div class="flow-card-top">
+        <div class="flow-status ${statusClass}"></div>
+        <div class="flow-title">${flow.title}</div>
+        <span class="flow-duration">${durationText}</span>
+        ${resultBadge}
+      </div>
+      <div class="flow-desc">${flow.desc}</div>
+      <div class="flow-tags">
+        ${flow.tags.map(t => `<span class="flow-tag">${t}</span>`).join('')}
+      </div>
+      <div class="flow-card-actions">
+        <button class="flow-action-btn ${runClass}" onclick="runFlow(${idx})" ${st.status === 'running' ? 'disabled' : ''}>
+          <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="5,3 19,12 5,21"/></svg>
+          ${runLabel}
+        </button>
+        <button class="flow-action-btn visualize" onclick="openVisualize(${idx})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Visualize
+        </button>
+        <button class="flow-action-btn code" onclick="openCode(${idx})">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          View Source Code
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function updateStats() {
+  const totalPassed = flowStates.filter(s => s.result === 'passed').length;
+  const totalFailed = flowStates.filter(s => s.result === 'failed').length;
+  const totalNotRun = flowStates.filter(s => s.status === 'idle').length;
+  const el = (id) => document.getElementById(id);
+  if (el('statPassed')) el('statPassed').textContent = totalPassed;
+  if (el('statFailed')) el('statFailed').textContent = totalFailed;
+  if (el('statPending')) el('statPending').textContent = totalNotRun;
+}
+
+// ─── RUN FLOW ───
+function runFlow(idx) {
+  if (flowStates[idx].status === 'running') return;
+  flowStates[idx] = { status: 'running', duration: null, result: null };
+  updateFlowCard(idx);
+  updateStats();
+
+  const duration = 1200 + Math.random() * 2200;
+  setTimeout(() => {
+    const passed = idx !== 5; // Make one fail for demo
+    flowStates[idx] = {
+      status: 'done',
+      duration: Math.round(duration),
+      result: passed ? 'passed' : 'failed'
+    };
+    updateFlowCard(idx);
+    updateStats();
+  }, duration);
+}
+
+function runAllFlows() {
+  FLOWS.forEach((_, idx) => {
+    setTimeout(() => runFlow(idx), idx * 400);
+  });
+}
+
+function updateFlowCard(idx) {
+  const card = document.getElementById(`flowCard${idx}`);
+  if (card) {
+    card.outerHTML = buildFlowCardHTML(FLOWS[idx], idx, flowStates[idx]);
+  }
+}
+
+// ─── VISUALIZE MODAL ───
+function openVisualize(idx) {
+  visFlowIdx = idx;
+  visStepIdx = 0;
+  document.getElementById('visFlowName').textContent = FLOWS[idx].title;
+  renderVisStep();
+  document.getElementById('visModal').classList.add('active');
+}
+
+function renderVisStep() {
+  const flow = FLOWS[visFlowIdx];
+  const step = flow.steps[visStepIdx];
+
+  document.getElementById('visUrl').textContent = step.url;
+
+  const viewport = document.getElementById('visStepContent');
+  const isLast = visStepIdx === flow.steps.length - 1;
+
+  viewport.innerHTML = `
+    <div class="vis-step-num">Step ${visStepIdx + 1} of ${flow.steps.length}</div>
+    <div class="vis-step-action">${step.action}</div>
+    <div class="vis-step-detail">${step.detail}</div>
+    ${!isLast ? '<div class="vis-click-indicator"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2"><path d="M6 3l14 9-14 9V3z"/></svg></div>' : '<div style="margin-top:16px;font-size:24px">✅</div>'}
+  `;
+  viewport.parentElement.style.background = isLast ? '#F0FFF4' : '#FAF8F5';
+
+  // Dots
+  const dotsContainer = document.getElementById('visStepDots');
+  dotsContainer.innerHTML = flow.steps.map((_, i) => {
+    let cls = 'vis-dot';
+    if (i < visStepIdx) cls += ' done';
+    else if (i === visStepIdx) cls += ' active';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+
+function visNext() {
+  const flow = FLOWS[visFlowIdx];
+  if (visStepIdx < flow.steps.length - 1) {
+    visStepIdx++;
+    renderVisStep();
+  }
+}
+
+function visPrev() {
+  if (visStepIdx > 0) {
+    visStepIdx--;
+    renderVisStep();
+  }
+}
+
+// ─── CODE MODAL ───
+function openCode(idx) {
+  const flow = FLOWS[idx];
+  document.getElementById('codeFilePath').textContent = `tests/flows/${flow.id}.spec.ts`;
+  document.getElementById('codeBody').innerHTML = `<div class="code-block">${highlightTS(flow.code)}</div>`;
+  document.getElementById('codeModal').classList.add('active');
+}
+
+function highlightTS(code) {
+  const lines = code.split('\n');
+  return lines.map((line, i) => {
+    let highlighted = escapeHtml(line);
+    // Keywords
+    highlighted = highlighted.replace(/\b(import|from|export|const|let|var|async|await|function|return|if|else|for|of|new|test|expect)\b/g, '<span class="hl-kw">$1</span>');
+    // Strings
+    highlighted = highlighted.replace(/(&#x27;[^&#]*?&#x27;|'[^']*?')/g, '<span class="hl-str">$1</span>');
+    highlighted = highlighted.replace(/(`[^`]*?`)/g, '<span class="hl-str">$1</span>');
+    // Comments
+    highlighted = highlighted.replace(/(\/\/.*)/g, '<span class="hl-cm">$1</span>');
+    // Numbers
+    highlighted = highlighted.replace(/\b(\d+)\b/g, '<span class="hl-num">$1</span>');
+    // Method calls
+    highlighted = highlighted.replace(/\.(\w+)\(/g, '.<span class="hl-fn">$1</span>(');
+    // test.describe / test
+    highlighted = highlighted.replace(/test\.describe/g, '<span class="hl-kw">test</span>.<span class="hl-fn">describe</span>');
+
+    return `<div class="code-line"><span class="code-line-num">${i + 1}</span><span class="code-line-content">${highlighted}</span></div>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
+// ─── MODAL CONTROLS ───
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeModal('visModal');
+    closeModal('codeModal');
+    closeModal('vdiffModal');
+  }
+});
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#pageSelector') && !e.target.closest('#pageDropdown')) {
+    document.getElementById('pageDropdown').style.display = 'none';
+  }
+});
+
+// ─── EDITOR TAB SWITCHING ───
+function switchEditorTab(tab) {
+  document.querySelectorAll('.tab-group .tab-item').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const chatPanel = document.getElementById('chatPanel');
+  const previewArea = document.querySelector('.preview-area');
+  const codeView = document.getElementById('codeEditorView');
+  const flowsPage = document.getElementById('flowsPage');
+  const sitePreview = document.getElementById('sitePreview');
+  const pageBar = document.getElementById('pageBar');
+
+  const codeContent = document.getElementById('codeContent');
+  const flowsCode = document.getElementById('flowsPageCode');
+
+  if (tab === 'code') {
+    chatPanel.style.display = 'none';
+    previewArea.style.display = 'none';
+    codeView.classList.add('active');
+    // Reset code view to show code (not flows)
+    codeContent.style.display = 'flex';
+    flowsCode.style.display = 'none';
+    if (!document.getElementById('codeEditArea').innerHTML) renderCodeContent();
+    initVersionTimeline();
+  } else {
+    chatPanel.style.display = '';
+    previewArea.style.display = '';
+    codeView.classList.remove('active');
+    // Restore correct page view
+    flowsPage.classList.remove('active');
+    sitePreview.style.display = 'block';
+    // Show the right page based on currentPage
+    const siteHome = document.getElementById('siteHome');
+    const siteCatalog = document.getElementById('siteCatalog');
+    if (currentPage === 'Catalog') {
+      siteHome.style.display = 'none';
+      siteCatalog.classList.add('active');
+    } else {
+      siteHome.style.display = 'block';
+      siteCatalog.classList.remove('active');
+    }
+  }
+}
+
+// ─── FLOWS TAB SWITCHING ───
+function switchFlowsTab(tab, btn) {
+  // Update tab buttons
+  const menu = btn.closest('.flows-tab-menu');
+  menu.querySelectorAll('.flows-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Update tab content
+  const container = btn.closest('.flows-page, #flowsPageCode, [id^="flowsPage"]') || btn.closest('[style*="overflow"]');
+  let parent = btn.parentElement.parentElement;
+  parent.querySelectorAll('.flows-tab-content').forEach(c => c.classList.remove('active'));
+  const target = parent.querySelector('#tab-' + tab);
+  if (target) target.classList.add('active');
+
+  // Initialize canvas when User Flows tab is shown
+  if (tab === 'userflows') {
+    setTimeout(function() {
+      renderFlowCanvas();
+      initCanvasPanZoom();
+    }, 50);
+  }
+}
+
+// ─── TREE TOGGLE (legacy, kept for compat) ───
+function toggleTreeNode(id) {
+  const node = document.getElementById(id);
+  if (node) node.classList.toggle('open');
+}
+
+// ─── VERSION CONTROL ───
+function initVersionTimeline() {
+  const tl = document.getElementById('vcTimeline');
+  if (!tl) return;
+  tl.innerHTML = VERSIONS.map((v, i) => {
+    const isActive = i === currentVersionIdx;
+    const hasChanges = v.changes.length > 0;
+    return `<div class="vc-dot ${isActive ? 'active' : ''} ${hasChanges ? 'has-changes' : ''}" onclick="goToVersion(${i})">
+      <div class="vc-dot-tooltip">${v.label}<br><span style="color:var(--text-muted)">${v.date}</span></div>
+    </div>`;
+  }).join('');
+  updateVcUI();
+}
+
+function updateVcUI() {
+  const v = VERSIONS[currentVersionIdx];
+  document.getElementById('vcHashText').textContent = v.hash;
+  document.getElementById('vcDateText').textContent = currentVersionIdx === VERSIONS.length - 1 ? '· latest' : '· ' + v.date;
+  document.getElementById('vcPrevBtn').disabled = currentVersionIdx === 0;
+  document.getElementById('vcNextBtn').disabled = currentVersionIdx === VERSIONS.length - 1;
+
+  // Update diff count
+  const dc = document.getElementById('vcDiffCount');
+  if (v.changes.length > 0) {
+    dc.style.display = '';
+    const totalDiffs = v.diffs ? v.diffs.length : 0;
+    dc.textContent = totalDiffs + ' change' + (totalDiffs !== 1 ? 's' : '');
+  } else {
+    dc.style.display = 'none';
+  }
+
+  // Update timeline dots
+  document.querySelectorAll('.vc-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentVersionIdx);
+  });
+
+  // Apply diffs to user flows tree if visible
+  applyDiffsToTree();
+}
+
+function goToVersion(idx) {
+  currentVersionIdx = idx;
+  updateVcUI();
+}
+
+function vcPrev() {
+  if (currentVersionIdx > 0) { currentVersionIdx--; updateVcUI(); }
+}
+function vcNext() {
+  if (currentVersionIdx < VERSIONS.length - 1) { currentVersionIdx++; updateVcUI(); }
+}
+
+function applyDiffsToTree() {
+  // Clear all diff classes (legacy tree + canvas nodes)
+  document.querySelectorAll('.diff-added,.diff-removed,.diff-modified,.diff-moved,.vcs-added,.vcs-removed,.vcs-modified').forEach(el => {
+    el.classList.remove('diff-added','diff-removed','diff-modified','diff-moved','vcs-added','vcs-removed','vcs-modified');
+    const hint = el.querySelector('.diff-click-hint');
+    if (hint) hint.remove();
+  });
+
+  const v = VERSIONS[currentVersionIdx];
+  if (!v.changes || v.changes.length === 0) return;
+
+  v.changes.forEach(change => {
+    const node = document.getElementById(change.nodeId);
+    if (!node) return;
+    // Support both old tree and new canvas classes
+    node.classList.add('diff-' + change.type);
+    node.classList.add('vcs-' + change.type);
+
+    if (v.diffs && v.diffs.length > 0) {
+      const header = node.querySelector('.tree-node-header') || node;
+      if (!header.querySelector('.diff-click-hint')) {
+        const hint = document.createElement('span');
+        hint.className = 'diff-click-hint';
+        hint.innerHTML = '👁 View change';
+        hint.onclick = function(e) {
+          e.stopPropagation();
+          openVisualDiff(currentVersionIdx, 0);
+        };
+        header.style.position = 'relative';
+        header.appendChild(hint);
+      }
+    }
+  });
+}
+
+function applyCanvasVCS() {
+  const v = VERSIONS[currentVersionIdx];
+  if (!v || !v.changes) return;
+  v.changes.forEach(change => {
+    const node = document.getElementById(change.nodeId);
+    if (node) node.classList.add('vcs-' + change.type);
+  });
+}
+
+function openVisualDiff(verIdx, diffIdx) {
+  const v = VERSIONS[verIdx];
+  if (!v.diffs || !v.diffs[diffIdx]) return;
+  const diff = v.diffs[diffIdx];
+  const prevV = verIdx > 0 ? VERSIONS[verIdx - 1] : VERSIONS[0];
+
+  document.getElementById('vdiffTitle').textContent = diff.title;
+  document.getElementById('vdiffOldVer').textContent = prevV.hash;
+  document.getElementById('vdiffNewVer').textContent = v.hash;
+
+  let body = `<div class="vdiff-description">${diff.description}</div>`;
+
+  // Build visual mockup
+  body += buildVisualDiffMockup(diff.mockup, diff);
+
+  // If multiple diffs in this version, add nav
+  if (v.diffs.length > 1) {
+    body += `<div style="display:flex;justify-content:center;gap:8px;margin-top:16px">`;
+    v.diffs.forEach((d, i) => {
+      const isActive = i === diffIdx;
+      body += `<button onclick="openVisualDiff(${verIdx},${i})" style="padding:6px 14px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:.15s;
+        background:${isActive ? 'var(--vibe-purple)' : 'var(--dark-surface)'};
+        color:${isActive ? '#fff' : 'var(--text-secondary)'};">${i + 1}. ${d.title.substring(0, 30)}…</button>`;
+    });
+    body += `</div>`;
+  }
+
+  document.getElementById('vdiffBody').innerHTML = body;
+  document.getElementById('vdiffModal').classList.add('active');
+}
+
+function buildVisualDiffMockup(mockupId, diff) {
+  const browser = (url, content) => `
+    <div class="vdiff-browser">
+      <div class="vdiff-browser-chrome">
+        <div class="vdiff-browser-dots"><span></span><span></span><span></span></div>
+        <div class="vdiff-browser-url">${url}</div>
+      </div>
+      <div class="vdiff-viewport">${content}</div>
+    </div>`;
+
+  switch (mockupId) {
+
+    case 'nav-signup-removed':
+      return browser('https://tooldonate.com/', `
+        <div class="mock-nav">
+          <div class="mock-nav-logo">Tool Library</div>
+          <div class="mock-nav-links">
+            <span class="mock-nav-link" style="font-weight:700">Home</span>
+            <span class="mock-nav-link">Catalog</span>
+            <span class="mock-nav-link">My Loans</span>
+            <span class="vd-deleted" style="display:inline-block">
+              <span class="mock-btn primary" style="padding:6px 16px;font-size:12px">Sign Up Free</span>
+            </span>
+          </div>
+        </div>
+        <div class="mock-hero">
+          <h2 style="font-size:28px">COMMUNITY<br><em>TOOL LIBRARY</em></h2>
+          <p>Why buy when you can borrow? Access shared tools from your neighbors.</p>
+          <div class="mock-btns">
+            <span class="mock-btn primary">Browse Catalog →</span>
+            <span class="vd-added" style="display:inline-block">
+              <span class="mock-btn secondary">Get Started</span>
+            </span>
+          </div>
+        </div>
+      `);
+
+    case 'search-moved':
+      return browser('https://tooldonate.com/', `
+        <div class="mock-nav" style="flex-wrap:wrap;gap:8px">
+          <div class="mock-nav-logo">Tool Library</div>
+          <div class="vd-moved-new" style="display:inline-flex;flex:1;max-width:260px;margin:0 16px">
+            <div style="width:100%;padding:7px 12px;background:#f3ede4;border-radius:6px;font-size:12px;color:#8B7A69;display:flex;align-items:center;gap:6px">
+              🔍 Search tools across all categories…
+            </div>
+          </div>
+          <div class="mock-nav-links">
+            <span class="mock-nav-link" style="font-weight:700">Home</span>
+            <span class="mock-nav-link">Catalog</span>
+            <span class="mock-nav-link">My Loans</span>
+          </div>
+        </div>
+        <div class="mock-hero">
+          <h2 style="font-size:28px">COMMUNITY<br><em>TOOL LIBRARY</em></h2>
+          <p>Why buy when you can borrow?</p>
+        </div>
+        <div style="padding:0 28px 16px;text-align:center">
+          <div class="vd-moved-old" style="display:inline-flex;width:280px;margin:0 auto">
+            <div style="width:100%;padding:8px 14px;background:#f3ede4;border-radius:6px;font-size:12px;color:#8B7A69;opacity:.5">
+              🔍 Search tools…
+            </div>
+          </div>
+          <div style="font-size:11px;color:#999;margin-top:8px">↑ Previously located here on catalog page</div>
+        </div>
+      `);
+
+    case 'quick-borrow-added':
+      return browser('https://tooldonate.com/', `
+        <div class="mock-nav">
+          <div class="mock-nav-logo">Tool Library</div>
+          <div class="mock-nav-links">
+            <span class="mock-nav-link" style="font-weight:700">Home</span>
+            <span class="mock-nav-link">Catalog</span>
+            <span class="mock-nav-link">My Loans</span>
+          </div>
+        </div>
+        <div class="mock-hero" style="padding-bottom:16px">
+          <h2 style="font-size:28px">COMMUNITY<br><em>TOOL LIBRARY</em></h2>
+          <p style="margin-bottom:16px">Why buy when you can borrow?</p>
+          <div class="mock-btns"><span class="mock-btn primary">Browse Catalog →</span></div>
+        </div>
+        <div style="padding:0 28px 24px">
+          <div class="vd-added" style="padding:20px;background:#fff;border-radius:12px;border:1px solid #e8e0d8;display:flex;align-items:center;gap:20px">
+            <div style="width:56px;height:56px;border-radius:10px;background:#f3ede4;display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">🔧</div>
+            <div style="flex:1;text-align:left">
+              <div style="font-size:15px;font-weight:700;color:#3B2710;margin-bottom:2px">Quick Borrow: Cordless Drill</div>
+              <div style="font-size:12px;color:#8B7A69">Most popular this week · Available now</div>
+            </div>
+            <span class="mock-btn primary" style="font-size:12px;padding:8px 18px;white-space:nowrap">Borrow Now →</span>
+          </div>
+        </div>
+      `);
+
+    case 'overdue-banner':
+      return browser('https://tooldonate.com/my-loans', `
+        <div class="mock-nav">
+          <div class="mock-nav-logo">Tool Library</div>
+          <div class="mock-nav-links">
+            <span class="mock-nav-link">Home</span>
+            <span class="mock-nav-link">Catalog</span>
+            <span class="mock-nav-link" style="font-weight:700">My Loans</span>
+          </div>
+        </div>
+        <div class="vd-added" style="margin:16px 28px;padding:14px 20px;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:22px">⚠️</span>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:#991B1B">You have 1 overdue item</div>
+            <div style="font-size:12px;color:#B91C1C">Circular Saw — 3 days overdue. Please return ASAP to avoid fees.</div>
+          </div>
+          <span class="mock-btn" style="background:#DC2626;color:#fff;font-size:12px;padding:7px 16px">Return Now</span>
+        </div>
+        <div style="padding:4px 28px">
+          <div style="font-size:16px;font-weight:700;color:#3B2710;margin-bottom:12px">Active Loans</div>
+          <div class="mock-card" style="margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div class="mock-card-title">Cordless Drill</div>
+                <div class="mock-card-desc">Borrowed Feb 2 · Due Feb 9</div>
+              </div>
+              <span class="mock-badge" style="background:#DCFCE7;color:#16A34A">On Time</span>
+            </div>
+          </div>
+        </div>
+      `);
+
+    case 'admin-moved':
+      return browser('https://tooldonate.com/', `
+        <div class="mock-nav">
+          <div class="mock-nav-logo">Tool Library</div>
+          <div class="mock-nav-links">
+            <span class="mock-nav-link" style="font-weight:700">Home</span>
+            <span class="mock-nav-link">Catalog</span>
+            <span class="mock-nav-link">My Loans</span>
+          </div>
+          <div class="vd-moved-new" style="display:inline-flex;position:relative">
+            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;cursor:pointer">O</div>
+            <div style="position:absolute;top:40px;right:0;background:#fff;border:1px solid #e8e0d8;border-radius:8px;padding:6px;width:160px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:5">
+              <div style="padding:6px 10px;font-size:12px;color:#6B5A49;border-radius:4px;cursor:pointer">My Profile</div>
+              <div style="padding:6px 10px;font-size:12px;color:#6B5A49;border-radius:4px;cursor:pointer">My Loans</div>
+              <div style="padding:6px 10px;font-size:12px;color:#4F46E5;font-weight:600;border-radius:4px;background:#EEF2FF;cursor:pointer">⚙ Admin Dashboard</div>
+              <div style="border-top:1px solid #e8e0d8;margin-top:4px;padding-top:4px">
+                <div style="padding:6px 10px;font-size:12px;color:#EF4444;border-radius:4px;cursor:pointer">Log out</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mock-hero">
+          <h2 style="font-size:28px">COMMUNITY<br><em>TOOL LIBRARY</em></h2>
+          <p>Why buy when you can borrow?</p>
+          <div class="mock-btns">
+            <span class="mock-btn primary">Browse Catalog →</span>
+            <span class="vd-moved-old" style="display:inline-block">
+              <span class="mock-btn secondary" style="opacity:.5">Admin Access</span>
+            </span>
+          </div>
+        </div>
+      `);
+
+    default:
+      return '<div style="padding:40px;text-align:center;color:var(--text-muted)">No visual preview available</div>';
+  }
+}
+
+function renderCodeContent() {
+  const codeStr = `// HPI 1.7-G
+import React, { useRef, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useSpring,
+  useInView,
+  AnimatePresence
+} from 'framer-motion';
+import {
+  Wrench,
+  Search,
+  Calendar,
+  Shield,
+  ArrowRight,
+  Terminal,
+  Cpu,
+  Activity,
+  ChevronRight,
+  Box,
+  Layers,
+  Zap
+} from 'lucide-react';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { Image } from '@/components/ui/image';
+import useMember from '@/integrations';
+
+// --- Types & Interfaces ---
+interface Feature {
+  icon: React.ComponentType;
+  title: string;
+  description: string;
+  color: string;
+}
+
+interface HeroStats {
+  label: string;
+  value: string;
+  suffix?: string;
+}
+
+// --- Constants ---
+const HERO_STATS: HeroStats[] = [
+  { label: 'Tools Available', value: '500', suffix: '+' },
+  { label: 'Active Members', value: '2.4K' },
+  { label: 'Monthly Loans', value: '890' },
+];
+
+const FEATURES: Feature[] = [
+  {
+    icon: Search,
+    title: 'Smart Catalog',
+    description: 'Browse and search tools with real-time filtering',
+    color: '#4F46E5',
+  },
+  {
+    icon: Calendar,
+    title: 'Easy Scheduling',
+    description: 'Book pickup times that work for you',
+    color: '#22C55E',
+  },
+  {
+    icon: Shield,
+    title: 'Trusted Community',
+    description: 'Verified members and damage protection',
+    color: '#F59E0B',
+  },
+  {
+    icon: Activity,
+    title: 'Loan Tracking',
+    description: 'Real-time status on all your borrows',
+    color: '#3B82F6',
+  },
+];
+
+// --- Component ---
+export default function HomePage() {
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start']
+  });
+  const y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  const { data: member } = useMember();
+
+  return (
+    <div className="min-h-screen bg-[#FAF8F5]">
+      <Header />
+      <motion.section
+        ref={heroRef}
+        style={{ y, opacity }}
+        className="relative pt-32 pb-20 px-6 text-center"
+      >
+        {/* Hero content */}
+      </motion.section>
+      <Footer />
+    </div>
+  );
+}`;
+
+  const area = document.getElementById('codeEditArea');
+  const lines = codeStr.split('\\n');
+  area.innerHTML = lines.map((line, i) => {
+    let hl = escapeHtml(line);
+    // Keywords
+    hl = hl.replace(/\\b(import|from|export|const|let|var|async|await|function|return|if|else|for|of|new|interface|default|type)\\b/g, '<span class="hl-kw">$1</span>');
+    // Strings
+    hl = hl.replace(/(&#x27;[^&#]*?&#x27;)/g, '<span class="hl-str">$1</span>');
+    hl = hl.replace(/(&quot;[^&]*?&quot;)/g, '<span class="hl-str">$1</span>');
+    // Comments
+    hl = hl.replace(/(\/\/.*)/g, '<span class="hl-cm">$1</span>');
+    // Numbers
+    hl = hl.replace(/\\b(\\d+\\.?\\d*)\\b/g, '<span class="hl-num">$1</span>');
+    // Types
+    hl = hl.replace(/\\b(React|HTMLDivElement|Feature|HeroStats|ComponentType)\\b/g, '<span class="hl-type">$1</span>');
+    return '<div class="ce-line"><span class="ce-num">' + (i + 1) + '</span><span class="ce-content">' + hl + '</span></div>';
+  }).join('');
+}
+
+// Expose functions used by inline onclick handlers
+window.showScreen = showScreen;
+window.startGeneration = startGeneration;
+window.togglePageDropdown = togglePageDropdown;
+window.selectPage = selectPage;
+window.switchEditorTab = switchEditorTab;
+window.switchFlowsTab = switchFlowsTab;
+window.runAllFlows = runAllFlows;
+window.runFlow = runFlow;
+window.canvasZoom = canvasZoom;
+window.canvasReset = canvasReset;
+window.toggleCanvasNode = toggleCanvasNode;
+window.openVisualize = openVisualize;
+window.visNext = visNext;
+window.visPrev = visPrev;
+window.openCode = openCode;
+window.closeModal = closeModal;
+window.goToVersion = goToVersion;
+window.vcPrev = vcPrev;
+window.vcNext = vcNext;
+window.openVisualDiff = openVisualDiff;
+window.toggleTreeNode = toggleTreeNode;

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wix Vibe – Product Flows Prototype</title>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ═══════ SCREEN 1: LANDING ═══════ -->
+<div id="landing" class="screen active">
+  <div class="landing-nav">
+    <div class="logo">WIX<span>Vibe</span><span class="logo-badge">BETA</span></div>
+    <a class="nav-link" href="#">All Sites</a>
+    <a class="nav-link" href="#">Help ▾</a>
+  </div>
+  <div class="landing-avatar">O</div>
+
+  <div class="landing-content">
+    <h1 class="landing-title">Turn <em>your ideas</em> into beautiful sites</h1>
+    <p class="landing-sub">Describe your vision and get a production-ready website in minutes</p>
+
+    <div class="prompt-box">
+      <textarea id="promptInput" placeholder="e.g., A site for my yoga studio with class schedules, online booking, membership plans and..."></textarea>
+      <div class="prompt-bottom">
+        <button class="prompt-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add
+        </button>
+        <button class="prompt-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12s1.5-4 4-4 4 4 4 4-1.5 4-4 4-4-4-4-4"/></svg>
+          Choose Your Style
+        </button>
+      </div>
+      <button class="generate-btn" id="generateBtn" onclick="startGeneration()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a1 1 0 011 1v7.59l2.3-2.3a1 1 0 111.4 1.42l-4 4a1 1 0 01-1.4 0l-4-4a1 1 0 111.4-1.42L11 10.59V3a1 1 0 011-1z" transform="rotate(-90 12 12)"/></svg>
+      </button>
+    </div>
+
+    <div class="more-ways">
+      More ways to get started:
+      <button class="more-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        Create from URL
+      </button>
+      <button class="more-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Import from Figma
+      </button>
+    </div>
+    <p class="ai-note">AI can make mistakes. Always double-check the results.</p>
+  </div>
+</div>
+
+<!-- ═══════ GENERATION OVERLAY ═══════ -->
+<div id="genOverlay" class="gen-overlay">
+  <div class="gen-spinner-ring"></div>
+  <div class="gen-text">Building your site</div>
+  <div class="gen-sub">This usually takes a minute or two</div>
+  <div class="gen-steps" id="genSteps">
+    <div class="gen-step-item" data-step="0"><span class="dot"></span>Analyzing your prompt</div>
+    <div class="gen-step-item" data-step="1"><span class="dot"></span>Designing site structure &amp; pages</div>
+    <div class="gen-step-item" data-step="2"><span class="dot"></span>Generating components &amp; layouts</div>
+    <div class="gen-step-item" data-step="3"><span class="dot"></span>Setting up data collections</div>
+    <div class="gen-step-item" data-step="4"><span class="dot"></span>Writing business logic</div>
+    <div class="gen-step-item highlight" data-step="5"><span class="dot"></span>Detecting product flows &amp; generating E2E tests ✨</div>
+    <div class="gen-step-item" data-step="6"><span class="dot"></span>Finalizing &amp; optimizing</div>
+  </div>
+</div>
+
+<!-- ═══════ SCREEN 2: EDITOR ═══════ -->
+<div id="editor" class="screen">
+  <!-- Top Bar -->
+  <div class="editor-topbar">
+    <div class="editor-logo">WIX<span>Vibe</span></div>
+    <div class="project-name">ToolShare</div>
+    <div class="tab-group">
+      <button class="tab-item active" onclick="switchEditorTab('site')">Site</button>
+      <button class="tab-item" onclick="switchEditorTab('dashboard')">Dashboard</button>
+      <button class="tab-item" onclick="switchEditorTab('code')">Code</button>
+    </div>
+    <div class="mode-group">
+      <button class="mode-btn active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
+        Demo
+      </button>
+      <button class="mode-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4v14a2 2 0 002 2h12a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit
+      </button>
+      <button class="mode-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        Style
+      </button>
+    </div>
+    <button class="btn-preview">Preview ▾</button>
+    <button class="btn-publish">Publish</button>
+  </div>
+
+  <div class="editor-body">
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chatPanel"></div>
+
+    <div class="preview-area">
+      <!-- Page bar -->
+      <div class="page-bar" id="pageBar">
+        <div class="page-selector" id="pageSelector" onclick="togglePageDropdown()">
+          Page: <strong id="currentPageName">Home</strong>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="pageDropdown" style="display:none;position:absolute;top:40px;left:16px;background:var(--dark-panel);border:1px solid var(--dark-border);border-radius:8px;padding:4px;z-index:20;min-width:180px">
+          <div class="page-dd-item" onclick="selectPage('Home')" style="padding:8px 12px;font-size:13px;color:var(--text-primary);border-radius:6px;cursor:pointer">Home</div>
+          <div class="page-dd-item" onclick="selectPage('Catalog')" style="padding:8px 12px;font-size:13px;color:var(--text-primary);border-radius:6px;cursor:pointer">Catalog</div>
+          <div class="page-dd-item" onclick="selectPage('Admin')" style="padding:8px 12px;font-size:13px;color:var(--text-primary);border-radius:6px;cursor:pointer">Admin</div>
+          <!-- Product Flows moved to editor top bar -->
+        </div>
+        <div class="domain-bar">
+          <svg style="width:12px;height:12px;vertical-align:middle;margin-right:4px;opacity:.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          tooldonate.com is available&nbsp;<a href="#">Get Your Domain</a>
+        </div>
+      </div>
+
+      <!-- Site Preview -->
+      <div class="site-preview" id="sitePreview">
+        <div class="site-content" id="siteHome">
+
+          <!-- Nav -->
+          <nav class="ts-nav">
+            <div class="ts-nav-logo">
+              <div class="logo-icon">🔧</div>
+              ToolShare
+            </div>
+            <div class="ts-nav-links">
+              <a class="ts-nav-link" style="color:#fff">Home</a>
+              <a class="ts-nav-link" onclick="selectPage('Catalog')" style="cursor:pointer">Catalog</a>
+              <a class="ts-nav-link">Admin</a>
+              <button class="ts-signin">Sign In</button>
+            </div>
+          </nav>
+
+          <!-- Hero -->
+          <div class="ts-hero">
+            <div class="ts-hero-left">
+              <div class="ts-hero-badge">SYSTEM ONLINE V2.0</div>
+              <h1 class="ts-hero-title">SHARE <span class="orange">TOOLS</span>.<br>BUILD<br><span class="orange">FUTURE</span>.</h1>
+              <p class="ts-hero-desc">Access professional-grade equipment without the overhead. A community-driven workshop ecosystem designed for creators, builders, and makers.</p>
+              <div class="ts-hero-btns">
+                <button class="ts-btn primary" onclick="selectPage('Catalog')">BROWSE CATALOG &nbsp;→</button>
+                <button class="ts-btn secondary">🔧 &nbsp;ADMIN ACCESS</button>
+              </div>
+            </div>
+            <div class="ts-hero-right">
+              <div class="ts-hero-img">
+                <div class="ts-hero-img-badge">STATUS: ACTIVE</div>
+              </div>
+            </div>
+            <div class="ts-scroll-hint">SCROLL TO EXPLORE</div>
+          </div>
+
+          <!-- Animated Marquee -->
+          <div class="ts-marquee">
+            <div class="ts-marquee-track">
+              <span class="ts-marquee-item">✦ HIGH PRECISION TOOLS <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ COMMUNITY DRIVEN <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ SMART INVENTORY <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ HIGH PRECISION TOOLS <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ COMMUNITY DRIVEN <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ SMART INVENTORY <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ HIGH PRECISION TOOLS <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ COMMUNITY DRIVEN <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ SMART INVENTORY <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ HIGH PRECISION TOOLS <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ COMMUNITY DRIVEN <span class="dot"></span></span>
+              <span class="ts-marquee-item">✦ SMART INVENTORY <span class="dot"></span></span>
+            </div>
+          </div>
+
+          <!-- Workflow Section -->
+          <div class="ts-workflow">
+            <div class="ts-wf-left">
+              <div class="ts-wf-badge">PROTOCOL</div>
+              <h2 class="ts-wf-title">SYSTEM<br><span class="orange">WORKFLOW</span></h2>
+              <p class="ts-wf-desc">Our lending protocol is designed for efficiency and safety. Follow the sequence to access the armory.</p>
+              <div class="ts-wf-stats">
+                <div class="ts-wf-stat"><span class="ts-wf-stat-label">LATENCY</span><span class="ts-wf-stat-value">0.02ms</span></div>
+                <div class="ts-wf-stat"><span class="ts-wf-stat-label">ENCRYPTION</span><span class="ts-wf-stat-value">AES-256</span></div>
+              </div>
+            </div>
+            <div class="ts-wf-right">
+              <div class="ts-step">
+                <div class="ts-step-num">01</div>
+                <div class="ts-step-icon">🔍</div>
+                <div class="ts-step-info">
+                  <h3>Browse Tools</h3>
+                  <p>Explore our extensive catalog of tools available for community members</p>
+                </div>
+              </div>
+              <div class="ts-step">
+                <div class="ts-step-num">02</div>
+                <div class="ts-step-icon">📅</div>
+                <div class="ts-step-info">
+                  <h3>Easy Booking</h3>
+                  <p>Reserve tools with our simple date-based booking system</p>
+                </div>
+              </div>
+              <div class="ts-step">
+                <div class="ts-step-num">03</div>
+                <div class="ts-step-icon">🛡️</div>
+                <div class="ts-step-info">
+                  <h3>Safety First</h3>
+                  <p>High-risk tools have automatic safety restrictions and time limits</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="ts-stats">
+            <div class="ts-stat-card">
+              <div class="ts-stat-gear">⚙</div>
+              <div class="ts-stat-value">150+</div>
+              <div class="ts-stat-label">Tools</div>
+              <div class="ts-stat-sub">PROFESSIONAL GRADE</div>
+            </div>
+            <div class="ts-stat-card">
+              <div class="ts-stat-gear">⚙</div>
+              <div class="ts-stat-value">98%</div>
+              <div class="ts-stat-label">Available</div>
+              <div class="ts-stat-sub">READY FOR PICKUP</div>
+            </div>
+            <div class="ts-stat-card">
+              <div class="ts-stat-gear">⚙</div>
+              <div class="ts-stat-value">24/7</div>
+              <div class="ts-stat-label">Access</div>
+              <div class="ts-stat-sub">DIGITAL PORTAL</div>
+            </div>
+          </div>
+
+          <!-- Quote -->
+          <div class="ts-quote">
+            <h2>"THE RIGHT TOOL<br>FOR THE JOB."</h2>
+            <button class="ts-quote-btn" onclick="selectPage('Catalog')">EXPLORE CATALOG</button>
+          </div>
+
+          <!-- CTA -->
+          <div class="ts-cta">
+            <div class="ts-cta-badge">SYSTEM READY</div>
+            <h2>INITIALIZE YOUR<br>PROJECT</h2>
+            <p>Join the collective. Access professional tools and contribute to the community resource pool.</p>
+            <div class="ts-cta-btns">
+              <button class="ts-btn primary" onclick="selectPage('Catalog')">BROWSE CATALOG</button>
+              <button class="ts-btn secondary" style="background:#1a1a1a;border-color:#333">AUTHENTICATE</button>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="ts-footer">
+            <div class="ts-footer-top">
+              <div class="ts-footer-brand">
+                <div class="ts-footer-brand-name"><div class="logo-icon">🔧</div> ToolShare</div>
+                <p>Building community through shared resources and sustainable tool access.</p>
+              </div>
+              <div class="ts-footer-col">
+                <h4>Quick Links</h4>
+                <a onclick="selectPage('Catalog')" style="cursor:pointer">Browse Catalog</a>
+                <a>My Dashboard</a>
+                <a>My Profile</a>
+              </div>
+              <div class="ts-footer-col">
+                <h4>Resources</h4>
+                <a>How It Works</a>
+                <a>Safety Guidelines</a>
+                <a>FAQ</a>
+              </div>
+              <div class="ts-footer-col">
+                <h4>Contact</h4>
+                <a class="contact-item"><span>✉</span> hello@toolshare.com</a>
+                <a class="contact-item"><span>📞</span> (555) 123-4567</a>
+                <a class="contact-item"><span>📍</span> 123 Community St</a>
+              </div>
+            </div>
+            <div class="ts-footer-bottom">
+              <span>© 2026 ToolShare. All rights reserved.</span>
+              <div><a>Privacy Policy</a><a>Terms of Service</a></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Catalog Page -->
+        <div class="ts-catalog" id="siteCatalog">
+          <!-- Nav (same as home) -->
+          <nav class="ts-nav">
+            <div class="ts-nav-logo">
+              <div class="logo-icon">🔧</div>
+              ToolShare
+            </div>
+            <div class="ts-nav-links">
+              <a class="ts-nav-link" onclick="selectPage('Home')" style="cursor:pointer">Home</a>
+              <a class="ts-nav-link" style="color:#fff">Catalog</a>
+              <a class="ts-nav-link" onclick="selectPage('Admin')" style="cursor:pointer">Admin</a>
+              <button class="ts-signin">Sign In</button>
+            </div>
+          </nav>
+
+          <!-- Catalog Header -->
+          <div class="ts-cat-header">
+            <h1 class="ts-cat-title">Tool Catalog</h1>
+            <p class="ts-cat-sub">Browse our complete collection of professional-grade tools</p>
+          </div>
+
+          <!-- Search & Filter -->
+          <div class="ts-cat-controls">
+            <div class="ts-cat-search">
+              <span class="ts-cat-search-icon">🔍</span>
+              <input type="text" placeholder="Search tools...">
+            </div>
+            <button class="ts-cat-filter">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M6 12h12M8 18h8"/></svg>
+              All Categories
+            </button>
+          </div>
+
+          <!-- Tool Grid -->
+          <div class="ts-cat-grid">
+            <!-- Row 1 -->
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🔩</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge on-loan">On Loan</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Cordless Drill</div>
+                <span class="ts-tool-category power">POWER TOOLS</span>
+                <div class="ts-tool-desc">20V MAX cordless drill driver with brushless motor, 2-speed gearbox, and LED work light.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🪚</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge high-risk">High Risk</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Circular Saw</div>
+                <span class="ts-tool-category power">POWER TOOLS</span>
+                <div class="ts-tool-desc">7-1/4" circular saw with magnesium guard, electric brake, and dust blower.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🔧</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge available">Available</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Orbital Sander</div>
+                <span class="ts-tool-category power">POWER TOOLS</span>
+                <div class="ts-tool-desc">5" random orbital sander with variable speed, dust collection bag, and soft grip.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🔧</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge available">Available</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Adjustable Wrench Set</div>
+                <span class="ts-tool-category hand">HAND TOOLS</span>
+                <div class="ts-tool-desc">6-piece adjustable wrench set with precision jaw, chrome vanadium steel construction.</div>
+              </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🪛</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge available">Available</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Screwdriver Kit</div>
+                <span class="ts-tool-category hand">HAND TOOLS</span>
+                <div class="ts-tool-desc">45-piece magnetic screwdriver set with Phillips, flathead, Torx, and hex bits.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🔨</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge on-loan">On Loan</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Claw Hammer</div>
+                <span class="ts-tool-category hand">HAND TOOLS</span>
+                <div class="ts-tool-desc">16oz fiberglass claw hammer with shock-absorbing grip and precision-forged head.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">⛏️</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge available">Available</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Garden Shovel</div>
+                <span class="ts-tool-category garden">GARDENING TOOLS</span>
+                <div class="ts-tool-desc">Round point digging shovel with tempered steel blade and ash hardwood handle.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">✂️</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge high-risk">High Risk</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Hedge Trimmer</div>
+                <span class="ts-tool-category garden">GARDENING TOOLS</span>
+                <div class="ts-tool-desc">22" dual-action blade electric hedge trimmer with rotating handle and cord lock.</div>
+              </div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">💨</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge available">Available</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Leaf Blower</div>
+                <span class="ts-tool-category garden">GARDENING TOOLS</span>
+                <div class="ts-tool-desc">40V cordless leaf blower with turbo mode, variable speed trigger, and cruise control.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🚗</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge maintenance">Maintenance</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Car Jack & Stands</div>
+                <span class="ts-tool-category auto">AUTOMOTIVE TOOLS</span>
+                <div class="ts-tool-desc">3-ton hydraulic floor jack with pair of jack stands. Safety lock mechanism included.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">📟</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge available">Available</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">OBD2 Scanner</div>
+                <span class="ts-tool-category auto">AUTOMOTIVE TOOLS</span>
+                <div class="ts-tool-desc">Professional OBD2 diagnostic scanner with live data streaming, freeze frame, and DTC lookup.</div>
+              </div>
+            </div>
+
+            <div class="ts-tool-card">
+              <div class="ts-tool-img">
+                <span class="tool-placeholder">🪵</span>
+                <div class="ts-tool-img-overlay"></div>
+                <span class="ts-tool-badge on-loan">On Loan</span>
+              </div>
+              <div class="ts-tool-info">
+                <div class="ts-tool-name">Router Table</div>
+                <span class="ts-tool-category wood">WOODWORKING TOOLS</span>
+                <div class="ts-tool-desc">Benchtop router table with adjustable fence, dust port, and quick-clamp system.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Load More -->
+          <div class="ts-cat-more">
+            <button class="ts-cat-more-btn">LOAD MORE TOOLS</button>
+          </div>
+
+          <!-- Footer (same as home) -->
+          <div class="ts-footer">
+            <div class="ts-footer-top">
+              <div class="ts-footer-brand">
+                <div class="ts-footer-brand-name"><div class="logo-icon">🔧</div> ToolShare</div>
+                <p>Building community through shared resources and sustainable tool access.</p>
+              </div>
+              <div class="ts-footer-col">
+                <h4>Quick Links</h4>
+                <a onclick="selectPage('Catalog')" style="cursor:pointer">Browse Catalog</a>
+                <a>My Dashboard</a>
+                <a>My Profile</a>
+              </div>
+              <div class="ts-footer-col">
+                <h4>Resources</h4>
+                <a>How It Works</a>
+                <a>Safety Guidelines</a>
+                <a>FAQ</a>
+              </div>
+              <div class="ts-footer-col">
+                <h4>Contact</h4>
+                <a class="contact-item"><span>✉</span> hello@toolshare.com</a>
+                <a class="contact-item"><span>📞</span> (555) 123-4567</a>
+                <a class="contact-item"><span>📍</span> 123 Community St</a>
+              </div>
+            </div>
+            <div class="ts-footer-bottom">
+              <span>© 2026 ToolShare. All rights reserved.</span>
+              <div><a>Privacy Policy</a><a>Terms of Service</a></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Product Flows Page -->
+      <div class="flows-page" id="flowsPage"></div>
+    </div>
+
+    <!-- Code Editor View (shown when Code tab is active) -->
+    <div class="code-editor-view" id="codeEditorView">
+      <div class="code-sidebar">
+        <button class="sidebar-pf-btn" onclick="selectPage('Product Flows')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Product Flows
+          <span class="pf-badge">NEW</span>
+        </button>
+        <div class="code-sidebar-toolbar">
+          <button title="Explorer">☰</button>
+          <button title="Search">🔍</button>
+          <button title="Source Control">⑂</button>
+          <button title="Extensions">⧉</button>
+        </div>
+        <div class="code-sidebar-title">Explorer</div>
+        <div class="code-sidebar-title" style="padding-top:4px;font-weight:700;color:var(--text-secondary);letter-spacing:0;text-transform:none;font-size:12px">USER-CODE</div>
+        <div class="code-tree">
+          <div class="tree-folder">▸ benchmark_events</div>
+          <div class="tree-folder">▸ eslint-rules</div>
+          <div class="tree-folder">▸ integrations</div>
+          <div class="tree-folder">▸ public</div>
+          <div class="tree-folder">▾ src</div>
+          <div class="tree-folder tree-indent-1">▸ .vibe</div>
+          <div class="tree-folder tree-indent-1">▾ components</div>
+          <div class="tree-folder tree-indent-2">▾ pages</div>
+          <div class="tree-file tree-indent-3" style="color:#4EC9B0">CatalogPage.tsx</div>
+          <div class="tree-file tree-indent-3" style="color:#4EC9B0">DashboardPage.tsx</div>
+          <div class="tree-file tree-indent-3 active" style="color:#4EC9B0">HomePage.tsx</div>
+          <div class="tree-file tree-indent-3" style="color:#4EC9B0">ProfilePage.tsx</div>
+          <div class="tree-file tree-indent-3" style="color:#4EC9B0">ToolDetailPage.tsx</div>
+          <div class="tree-folder tree-indent-2">▸ ui</div>
+          <div class="tree-file tree-indent-2" style="color:#4EC9B0">BookingModal.tsx</div>
+          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Footer.tsx</div>
+          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Head.tsx</div>
+          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Header.tsx</div>
+          <div class="tree-file tree-indent-2" style="color:#4EC9B0">Router.tsx</div>
+          <div class="tree-folder tree-indent-1">▸ entities</div>
+          <div class="tree-folder tree-indent-1">▸ hooks</div>
+          <div class="tree-folder tree-indent-1">▸ lib</div>
+          <div class="tree-folder tree-indent-1">▸ pages</div>
+          <div class="tree-folder tree-indent-1">▸ styles</div>
+          <div class="tree-file tree-indent-1" style="color:#3B82F6">env.d.ts</div>
+          <div class="tree-file tree-indent-1" style="color:#F59E0B">tailwind.config.mjs</div>
+          <div class="tree-file">⚙ .gitignore</div>
+        </div>
+      </div>
+      <div class="code-main">
+        <div class="code-topbar">
+          <div class="code-topbar-left">Code</div>
+          <div class="code-topbar-right">
+            <button class="code-topbar-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+              GitHub
+            </button>
+            <button class="code-topbar-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg>
+              Split view
+            </button>
+          </div>
+        </div>
+        <!-- Version Control Bar -->
+        <div class="vc-bar" id="vcBar">
+          <div class="vc-label">
+            <svg style="width:13px;height:13px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><line x1="1.05" y1="12" x2="7" y2="12"/><line x1="17.01" y1="12" x2="22.96" y2="12"/></svg>
+            Version
+          </div>
+          <div class="vc-nav">
+            <button class="vc-nav-btn" onclick="vcPrev()" id="vcPrevBtn" disabled>◀</button>
+          </div>
+          <div class="vc-selector" id="vcSelector" onclick="toggleVcDropdown()">
+            <span class="vc-hash">#</span><span id="vcHashText">4a3f2c1</span>
+            <span id="vcDateText" style="color:var(--text-muted);font-weight:400">· latest</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          <div class="vc-timeline" id="vcTimeline"></div>
+          <div class="vc-diff-count" id="vcDiffCount" style="display:none">0 changes</div>
+          <div class="vc-nav">
+            <button class="vc-nav-btn" onclick="vcNext()" id="vcNextBtn" disabled>▶</button>
+          </div>
+        </div>
+        <!-- Code content (visible by default in code tab) -->
+        <div id="codeContent" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+          <div class="code-tab-bar">
+            <div class="code-tab active">
+              <span style="color:#4EC9B0">✦</span> HomePage.tsx <span class="close-x">×</span>
+            </div>
+          </div>
+          <div class="code-breadcrumb">
+            src <span>›</span> components <span>›</span> pages <span>›</span> <span style="color:var(--text-primary)">HomePage.tsx</span> <span>›</span> ...
+          </div>
+          <div class="code-edit-area" id="codeEditArea"></div>
+        </div>
+        <!-- Product Flows panel (replaces code when activated) -->
+        <div class="flows-page" id="flowsPageCode" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ VISUALIZE MODAL ═══════ -->
+<div class="modal-overlay" id="visModal">
+  <div class="vis-modal">
+    <div class="vis-header">
+      <div class="vis-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+        <span id="visFlowName">Flow Visualization</span>
+      </div>
+      <button class="vis-close" onclick="closeModal('visModal')">✕</button>
+    </div>
+    <div class="vis-browser">
+      <div class="browser-chrome">
+        <div class="browser-dots"><span></span><span></span><span></span></div>
+        <div class="browser-url" id="visUrl">https://tooldonate.com</div>
+      </div>
+      <div class="browser-viewport" id="visViewport">
+        <div class="vis-step-content" id="visStepContent"></div>
+      </div>
+    </div>
+    <div class="vis-progress">
+      <div class="vis-step-dots" id="visStepDots"></div>
+      <div class="vis-controls">
+        <button class="vis-ctrl-btn" onclick="visPrev()">← Prev</button>
+        <button class="vis-ctrl-btn primary" onclick="visNext()">Next →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ CODE MODAL ═══════ -->
+<div class="modal-overlay" id="codeModal">
+  <div class="code-modal">
+    <div class="code-header">
+      <div class="code-file-path">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span id="codeFilePath">tests/flows/browse-catalog.spec.ts</span>
+      </div>
+      <button class="vis-close" onclick="closeModal('codeModal')">✕</button>
+    </div>
+    <div class="code-body" id="codeBody"></div>
+  </div>
+</div>
+
+<!-- ═══════ VISUAL DIFF MODAL ═══════ -->
+<div class="modal-overlay" id="vdiffModal">
+  <div class="vdiff-modal">
+    <div class="vdiff-header">
+      <div class="vdiff-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span id="vdiffTitle">Visual Change</span>
+      </div>
+      <div class="vdiff-version-info">
+        <span class="vdiff-ver-badge old" id="vdiffOldVer">v1.0</span>
+        <span class="vdiff-arrow">→</span>
+        <span class="vdiff-ver-badge new" id="vdiffNewVer">v1.1</span>
+      </div>
+      <button class="vis-close" onclick="closeModal('vdiffModal')">✕</button>
+    </div>
+    <div class="vdiff-body" id="vdiffBody"></div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
