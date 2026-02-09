@@ -390,8 +390,8 @@ const VERSIONS = [
   {
     hash: 'c3d8f12', label: 'v1.1 — Removed "Sign Up" CTA', date: 'Feb 6, 2:15 PM',
     changes: [
-      { nodeId: 'uf-auth', type: 'modified', desc: 'Registration entry point changed' },
-      { nodeId: 'uf-cta', type: 'modified', desc: 'Homepage CTAs updated' },
+      { nodeId: 'pg-login', type: 'modified', desc: 'Registration entry point changed' },
+      { nodeId: 'pg-home', type: 'modified', desc: 'Homepage CTAs updated' },
     ],
     diffs: [
       {
@@ -408,8 +408,8 @@ const VERSIONS = [
   {
     hash: '8f2a4b9', label: 'v1.2 — Search Bar Redesign', date: 'Feb 7, 9:45 AM',
     changes: [
-      { nodeId: 'uf-nav-catalog', type: 'modified', desc: 'Search component restructured' },
-      { nodeId: 'uf-nav-home', type: 'modified', desc: 'Search moved from catalog to global header' },
+      { nodeId: 'pg-catalog', type: 'modified', desc: 'Search component restructured' },
+      { nodeId: 'pg-home', type: 'modified', desc: 'Search moved from catalog to global header' },
     ],
     diffs: [
       {
@@ -426,8 +426,8 @@ const VERSIONS = [
   {
     hash: 'e5c1d03', label: 'v1.3 — New Quick Borrow Flow', date: 'Feb 7, 3:20 PM',
     changes: [
-      { nodeId: 'uf-cta', type: 'modified', desc: 'New CTA added to homepage' },
-      { nodeId: 'uf-nav-catalog-detail', type: 'modified', desc: 'Borrow modal updated' },
+      { nodeId: 'pg-home', type: 'modified', desc: 'New CTA added to homepage' },
+      { nodeId: 'pg-product', type: 'modified', desc: 'Borrow modal updated' },
     ],
     diffs: [
       {
@@ -444,7 +444,7 @@ const VERSIONS = [
   {
     hash: '4a3f2c1', label: 'v1.4 — Admin Overdue Redesign', date: 'Feb 8, 10:12 AM',
     changes: [
-      { nodeId: 'uf-nav-dashboard', type: 'modified', desc: 'Dashboard notifications revamped' },
+      { nodeId: 'pg-admin', type: 'modified', desc: 'Dashboard notifications revamped' },
     ],
     diffs: [
       {
@@ -708,8 +708,8 @@ function buildUserFlowsTab() {
         <div class="canvas-grid"></div>
         <svg class="flow-svg" id="flowSvg">
           <defs>
-            <marker id="arrowM" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" class="arrow-head"/>
+            <marker id="arrowM" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+              <polygon points="0 0, 10 4, 0 8" class="arrow-head"/>
             </marker>
           </defs>
         </svg>
@@ -728,57 +728,81 @@ function buildUserFlowsTab() {
 }
 
 /* ─── CANVAS FLOW DATA ─── */
+/*
+  Node types:
+    'flow-title'  – flow header, non-clickable
+    'page'        – a full page, clickable (view page, source, tests)
+    'widget'      – a widget / component inside a page, clickable
+    'condition'   – diamond / rhombus decision point
+    'group'       – dashed bounding box (visual grouping only)
+
+  Edge format: [fromId, toId, edgeType, actionLabel?]
+    edgeType: 'straight' | 'yes' | 'no' | 'action'
+    actionLabel: optional text shown ON the arrow
+*/
 const FLOW_NODES = [
-  // Top-level entry
-  { id:'uf-auth', type:'rect', label:'User log-in', icon:'👤', x:460, y:30, w:150, file:'src/pages/Login.tsx', editor:'Dev_TeamLead (2 days ago)', color:'', expandable:false },
-  { id:'uf-auth-flow', type:'rect', label:'Authentication flow', icon:'🔐', x:440, y:110, w:180, file:'src/auth/AuthProvider.tsx', editor:'Dev_TeamLead (3 days ago)', color:'', expandable:false },
-  // Decision diamond
-  { id:'uf-decision', type:'diamond', label:'Logged in?', x:490, y:205, file:'src/auth/AuthGuard.tsx', editor:'Dev_TeamLead (3 days ago)' },
-  // Auth failure
-  { id:'uf-auth-fail', type:'rect', label:'Auth failure flow', icon:'⚠️', x:740, y:285, w:160, file:'src/pages/AuthError.tsx', editor:'Dev_FrontEnd (5 days ago)', color:'', expandable:false },
-  // Authenticated guard bounding box
-  { id:'uf-guard-group', type:'group', label:'Authenticated Guard', x:120, y:295, w:550, h:250 },
-  // Pages inside guard
-  { id:'uf-nav-home', type:'rect', label:'Home', icon:'🏠', x:175, y:370, w:120, file:'src/pages/Home.tsx', editor:'Dev_TeamLead (1 day ago)', color:'green', expandable:true,
+  // ── Flow 1: User Authentication ──
+  { id:'flow-auth', type:'flow-title', label:'User Authentication Flow', x:330, y:20 },
+  { id:'pg-login', type:'page', label:'Login Page', icon:'👤', x:370, y:90, w:160, file:'src/pages/Login.tsx', editor:'Dev_TeamLead (2 days ago)', color:'purple' },
+  { id:'cond-loggedin', type:'condition', label:'Authenticated?', x:410, y:210, file:'src/auth/AuthGuard.tsx', editor:'Dev_TeamLead (3 days ago)' },
+  { id:'pg-auth-error', type:'page', label:'Auth Error Page', icon:'⚠️', x:680, y:210, w:170, file:'src/pages/AuthError.tsx', editor:'Dev_FrontEnd (5 days ago)', color:'' },
+
+  // ── Flow 2: Main App (authenticated) ──
+  { id:'flow-main', type:'flow-title', label:'Main App Navigation', x:190, y:340 },
+  { id:'grp-auth-guard', type:'group', label:'Authenticated Area', x:60, y:380, w:520, h:130 },
+
+  { id:'pg-home', type:'page', label:'Home Page', icon:'🏠', x:100, y:420, w:140, file:'src/pages/Home.tsx', editor:'Dev_TeamLead (1 day ago)', color:'green',
     children:[
-      { id:'uf-home-hero', type:'rect', label:'Hero Section', icon:'🎯', x:60, y:520, w:130, file:'HomePage.tsx:87', editor:'Dev_FrontEnd (2 days ago)', color:'', expandable:false },
-      { id:'uf-home-features', type:'rect', label:'Features Grid', icon:'📊', x:210, y:520, w:140, file:'HomePage.tsx:142', editor:'Dev_FrontEnd (2 days ago)', color:'', expandable:false },
-      { id:'uf-home-stats', type:'rect', label:'Community Stats', icon:'📈', x:370, y:520, w:155, file:'HomePage.tsx:198', editor:'Dev_FrontEnd (3 days ago)', color:'', expandable:false },
+      { id:'wg-hero', type:'widget', label:'Hero Section', icon:'🎯', x:30, y:730, w:140, file:'src/components/HeroSection.tsx', editor:'Dev_FrontEnd (2 days ago)' },
+      { id:'wg-features', type:'widget', label:'Features Grid', icon:'📊', x:200, y:730, w:155, file:'src/components/FeaturesGrid.tsx', editor:'Dev_FrontEnd (2 days ago)' },
+      { id:'wg-stats', type:'widget', label:'Community Stats', icon:'📈', x:385, y:730, w:170, file:'src/components/CommunityStats.tsx', editor:'Dev_FrontEnd (3 days ago)' },
     ]
   },
-  { id:'uf-nav-catalog', type:'rect', label:'Catalog', icon:'😊', x:355, y:370, w:120, file:'src/pages/Catalog.tsx', editor:'Dev_FrontEnd (1 day ago)', color:'yellow', expandable:true,
+  { id:'pg-catalog', type:'page', label:'Catalog Page', icon:'📦', x:310, y:420, w:155, file:'src/pages/Catalog.tsx', editor:'Dev_FrontEnd (1 day ago)', color:'yellow',
     children:[
-      { id:'uf-cat-search', type:'square', label:'searchTools()', icon:'🔍', x:305, y:520, w:130, file:'CatalogPage.tsx:34', editor:'Dev_FrontEnd (1 day ago)' },
-      { id:'uf-cat-filter', type:'square', label:'filterByCategory()', icon:'📂', x:455, y:520, w:155, file:'CatalogPage.tsx:52', editor:'Dev_FrontEnd (2 days ago)' },
-      { id:'uf-cat-api', type:'square', label:'fetchTools()', icon:'⚡', x:380, y:575, w:120, file:'GET /api/tools', editor:'Dev_Backend (3 days ago)' },
+      { id:'wg-search', type:'widget', label:'Search Bar', icon:'🔍', x:280, y:730, w:130, file:'src/components/SearchBar.tsx', editor:'Dev_FrontEnd (1 day ago)' },
+      { id:'wg-filter', type:'widget', label:'Category Filter', icon:'📂', x:440, y:730, w:155, file:'src/components/CategoryFilter.tsx', editor:'Dev_FrontEnd (2 days ago)' },
     ]
   },
-  { id:'uf-nav-admin', type:'rect', label:'Admin', icon:'🛡️', x:535, y:370, w:110, file:'src/pages/Admin.tsx', editor:'Dev_TeamLead (4 days ago)', color:'cyan', expandable:true,
+  { id:'pg-admin', type:'page', label:'Admin Panel', icon:'🛡️', x:100, y:600, w:140, file:'src/pages/Admin.tsx', editor:'Dev_TeamLead (4 days ago)', color:'cyan',
     children:[
-      { id:'uf-admin-catalog', type:'rect', label:'Admin Catalog', icon:'📋', x:680, y:350, w:150, file:'src/pages/AdminCatalog.tsx', editor:'Dev_Backend (2 days ago)', color:'', expandable:false },
-      { id:'uf-admin-api', type:'square', label:'API Call: /admin-panel', icon:'🔗', x:870, y:350, w:180, file:'GET /api/admin/panel', editor:'Dev_Backend (2 days ago)' },
-      { id:'uf-admin-access', type:'rect', label:'Admin Access flow', icon:'🔑', x:700, y:420, w:160, file:'src/auth/AdminGuard.tsx', editor:'Dev_TeamLead (5 days ago)', color:'', expandable:false },
+      { id:'wg-admin-list', type:'widget', label:'Admin Catalog', icon:'📋', x:30, y:830, w:155, file:'src/pages/AdminCatalog.tsx', editor:'Dev_Backend (2 days ago)' },
+      { id:'wg-admin-api', type:'widget', label:'API Dashboard', icon:'🔗', x:210, y:830, w:155, file:'src/components/APIDashboard.tsx', editor:'Dev_Backend (2 days ago)' },
     ]
   },
-  // CTAs
-  { id:'uf-cta', type:'square', label:'CTAs', icon:'☐', x:385, y:460, w:70, file:'HomePage.tsx:90', editor:'Dev_FrontEnd (1 day ago)' },
-  // CTA targets
-  { id:'uf-cta-browse', type:'rect', label:'Browse Catalog', icon:'🔍', x:220, y:460, w:145, file:'HomePage.tsx:95', editor:'Dev_FrontEnd (1 day ago)', color:'', expandable:false },
-  { id:'uf-cta-admin', type:'rect', label:'Admin Access', icon:'🛡️', x:220, y:510, w:140, file:'HomePage.tsx:102', editor:'Dev_TeamLead (3 days ago)', color:'', expandable:false },
+
+  // ── Flow 3: Product Detail ──
+  { id:'flow-product', type:'flow-title', label:'Product Detail Flow', x:620, y:340 },
+  { id:'pg-product', type:'page', label:'Product Page', icon:'🛒', x:650, y:420, w:165, file:'src/pages/Product.tsx', editor:'Dev_FrontEnd (1 day ago)', color:'' },
+  { id:'cond-in-stock', type:'condition', label:'In stock?', x:690, y:560, file:'src/utils/inventory.ts', editor:'Dev_Backend (2 days ago)' },
+  { id:'wg-add-cart', type:'widget', label:'Add to Cart', icon:'🛒', x:560, y:690, w:145, file:'src/components/AddToCart.tsx', editor:'Dev_FrontEnd (1 day ago)' },
+  { id:'pg-waitlist', type:'page', label:'Waitlist Page', icon:'⏳', x:770, y:690, w:155, file:'src/pages/Waitlist.tsx', editor:'Dev_FrontEnd (3 days ago)', color:'' },
 ];
 
-/* Connection definitions: [fromId, toId, type] */
+/* Connection definitions: [fromId, toId, edgeType, actionLabel?] */
 const FLOW_EDGES = [
-  ['uf-auth', 'uf-auth-flow', 'straight'],
-  ['uf-auth-flow', 'uf-decision', 'straight'],
-  ['uf-decision', 'uf-nav-home', 'yes'],
-  ['uf-decision', 'uf-nav-catalog', 'yes'],
-  ['uf-decision', 'uf-nav-admin', 'yes'],
-  ['uf-decision', 'uf-auth-fail', 'no'],
-  ['uf-nav-home', 'uf-cta', 'child'],
-  ['uf-cta', 'uf-cta-browse', 'child'],
-  ['uf-cta', 'uf-cta-admin', 'child'],
-  ['uf-nav-admin', 'uf-admin-catalog', 'child'],
-  ['uf-admin-catalog', 'uf-admin-api', 'child'],
-  ['uf-nav-admin', 'uf-admin-access', 'child'],
+  // Auth flow
+  ['flow-auth',    'pg-login',       'straight', ''],
+  ['pg-login',     'cond-loggedin',  'action',   'Submit credentials'],
+  ['cond-loggedin','pg-home',        'yes',      ''],
+  ['cond-loggedin','pg-auth-error',  'no',       ''],
+
+  // Home → Catalog
+  ['pg-home',    'pg-catalog',  'action', 'Click "Browse Catalog"'],
+
+  // Home → Admin
+  ['pg-home',    'pg-admin',    'action', 'Click "Admin Panel"'],
+
+  // Catalog → Product (directly from collection)
+  ['pg-catalog', 'pg-product',  'action', 'Click product card'],
+
+  // Product detail flow
+  ['flow-product',  'pg-product',     'straight', ''],
+  ['pg-product',    'cond-in-stock',  'action',   'Check availability'],
+  ['cond-in-stock', 'wg-add-cart',    'yes',      ''],
+  ['cond-in-stock', 'pg-waitlist',    'no',       ''],
+
+  // Admin drill-down
+  ['pg-admin',       'wg-admin-list', 'action', 'Open catalog manager'],
+  ['wg-admin-list',  'wg-admin-api',  'action', 'Fetch API data'],
 ];
