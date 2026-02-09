@@ -770,10 +770,10 @@ input,textarea{font-family:var(--font);border:none;outline:none}
 
 /* Code Modal */
 .code-modal{
-  width:780px;max-width:90vw;background:var(--dark-panel);border-radius:16px;
-  border:1px solid var(--dark-border);overflow:hidden;max-height:85vh;display:flex;flex-direction:column;
+  width:1120px;max-width:95vw;background:var(--dark-panel);border-radius:16px;
+  border:1px solid var(--dark-border);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;
 }
-.code-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--dark-border)}
+.code-header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--dark-border)}
 .code-file-path{font-size:13px;color:var(--text-muted);font-family:var(--mono);display:flex;align-items:center;gap:8px}
 .code-file-path svg{width:14px;height:14px;color:var(--vibe-purple-light)}
 .code-body{flex:1;overflow:auto;padding:0}
@@ -797,6 +797,154 @@ input,textarea{font-family:var(--font);border:none;outline:none}
 .hl-type{color:#4EC9B0}
 .hl-var{color:#9CDCFE}
 .hl-prop{color:#9CDCFE}
+
+/* ─── CODE MODAL: SPLIT VIEW, VERSION CONTROL & DIFF ─── */
+.code-modal-vc{display:flex;align-items:center;gap:6px;margin-left:auto}
+.code-vc-nav{
+  width:26px;height:26px;border-radius:5px;background:var(--dark-surface);
+  border:1px solid var(--dark-border);color:var(--text-secondary);
+  display:flex;align-items:center;justify-content:center;font-size:12px;
+  transition:.15s;cursor:pointer;
+}
+.code-vc-nav:hover:not(:disabled){background:var(--dark-border);color:var(--text-primary)}
+.code-vc-nav:disabled{opacity:.3;cursor:default}
+.code-vc-label{
+  padding:4px 10px;border-radius:5px;background:var(--dark-surface);
+  border:1px solid var(--dark-border);font-size:11px;font-weight:600;
+  color:var(--text-primary);font-family:var(--mono);white-space:nowrap;
+}
+.code-diff-toggle{
+  display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;
+  font-size:11px;font-weight:600;color:var(--text-secondary);
+  background:var(--dark-surface);border:1px solid var(--dark-border);
+  transition:.15s;cursor:pointer;margin-left:4px;
+}
+.code-diff-toggle:hover{border-color:var(--vibe-purple-light);color:var(--text-primary)}
+.code-diff-toggle.active{background:rgba(79,70,229,.15);border-color:var(--vibe-purple);color:var(--vibe-purple-light)}
+.code-diff-toggle svg{flex-shrink:0}
+
+/* Split body */
+.code-split-body{display:flex;flex:1;overflow:hidden}
+
+/* Story pane (left) */
+.code-story-pane{
+  width:320px;min-width:280px;overflow-y:auto;padding:20px;
+  background:#0e0e1a;border-right:1px solid var(--dark-border);flex-shrink:0;
+}
+.code-story-header h4{
+  font-size:11px;font-weight:700;color:var(--text-muted);
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;
+}
+.code-test-steps{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.code-test-step{
+  display:flex;gap:10px;align-items:flex-start;font-size:12px;
+  padding:8px 10px;background:var(--dark-surface);border-radius:8px;
+  border:1px solid var(--dark-border);
+}
+.code-step-num{
+  width:20px;height:20px;border-radius:50%;background:var(--vibe-purple);
+  color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.code-step-action{font-weight:600;color:var(--text-primary);margin-bottom:2px}
+.code-step-detail{font-size:11px;color:var(--text-muted);line-height:1.4}
+
+/* Version change info block */
+.code-change-info{
+  margin-bottom:16px;padding:14px;background:rgba(245,158,11,.06);
+  border:1px solid rgba(245,158,11,.2);border-radius:8px;
+}
+.code-change-info h4{
+  font-size:11px;font-weight:700;color:var(--amber);
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;
+}
+.code-change-desc{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:6px}
+.code-change-version{font-size:10px;color:var(--text-muted);font-family:var(--mono)}
+
+/* Changed story step highlight (diff mode) */
+.story-step-changed{
+  background:rgba(245,158,11,.08);border-left:3px solid var(--amber);
+  padding-left:5px;margin-left:-8px;border-radius:4px;
+}
+
+/* Changed test step highlight (diff mode) */
+.code-test-step-changed{
+  border-color:var(--amber)!important;background:rgba(245,158,11,.06)!important;
+  box-shadow:inset 3px 0 0 var(--amber),0 0 8px rgba(245,158,11,.1);
+}
+.code-test-step-changed .code-step-num{background:var(--amber)}
+
+/* Code pane (right) */
+.code-right-pane{flex:1;overflow:auto;padding:0}
+
+/* ─── DIFF VIEW ─── */
+.diff-summary{
+  display:flex;gap:16px;align-items:center;padding:10px 16px;
+  background:var(--dark-surface);border-bottom:1px solid var(--dark-border);
+  font-size:12px;position:sticky;top:0;z-index:2;
+}
+.diff-stat-added{color:var(--green);font-weight:600}
+.diff-stat-removed{color:var(--red);font-weight:600}
+
+.diff-view{font-family:var(--mono);font-size:13px;line-height:1.7;padding:0}
+.diff-line{display:flex;padding:0 8px;min-height:22px}
+.diff-line:hover{filter:brightness(1.15)}
+.diff-line.diff-added{background:rgba(34,197,94,.07)}
+.diff-line.diff-removed{background:rgba(239,68,68,.07)}
+.diff-num{
+  width:36px;text-align:right;color:var(--text-muted);opacity:.35;
+  user-select:none;flex-shrink:0;padding-right:4px;font-size:12px;
+}
+.diff-marker{
+  width:18px;text-align:center;flex-shrink:0;font-weight:700;user-select:none;
+}
+.diff-added .diff-marker{color:var(--green)}
+.diff-removed .diff-marker{color:var(--red)}
+.diff-content{flex:1;color:#D4D4D4;white-space:pre;tab-size:2}
+.diff-added .diff-content{color:#86efac}
+.diff-removed .diff-content{color:#fca5a5}
+
+/* ─── CODE MODAL FOOTER (Regenerate) ─── */
+.code-modal-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;border-top:1px solid var(--dark-border);background:var(--dark-surface);flex-shrink:0;
+}
+.code-regen-context{
+  font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:4px;
+}
+.regen-context-label{font-weight:600;color:var(--text-secondary)}
+
+.code-regen-btn{
+  display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:8px;
+  font-size:12px;font-weight:600;color:var(--text-primary);
+  background:var(--dark-panel);border:1px solid var(--dark-border);
+  transition:all .2s;cursor:pointer;position:relative;
+}
+.code-regen-btn:hover:not(:disabled){border-color:var(--vibe-purple-light);color:#fff;background:rgba(79,70,229,.1)}
+.code-regen-btn:disabled{cursor:default;opacity:.85}
+.code-regen-btn .regen-icon{width:14px;height:14px;flex-shrink:0;transition:transform .3s}
+.code-regen-btn .regen-spinner{width:14px;height:14px;flex-shrink:0;display:none;animation:spin .8s linear infinite}
+
+.code-regen-btn.regenerating{border-color:var(--vibe-purple);background:rgba(79,70,229,.08)}
+.code-regen-btn.regenerating .regen-icon{display:none}
+.code-regen-btn.regenerating .regen-spinner{display:block;color:var(--vibe-purple-light)}
+
+.code-regen-btn.done{border-color:var(--green);background:rgba(34,197,94,.08);color:var(--green)}
+.code-regen-btn.done .regen-icon{color:var(--green)}
+
+/* Code line regeneration shimmer */
+.code-line-regen{
+  animation:codeLineShimmer .6s ease forwards;
+}
+@keyframes codeLineShimmer{
+  0%{background:transparent}
+  40%{background:rgba(79,70,229,.08)}
+  100%{background:transparent}
+}
+
+/* Fresh code block fade-in */
+.code-block-fresh{animation:codeFadeIn .4s ease}
+@keyframes codeFadeIn{from{opacity:0}to{opacity:1}}
 
 /* ─── WIDGET LIBRARY ─── */
 .widget-lib-intro{

@@ -442,7 +442,7 @@ const VERSIONS = [
       { widgetId: 'hero-banner', type: 'modified', desc: 'Hero CTA now primary registration entry' },
     ],
     flowChanges: [
-      { flowId: 'user-registration', type: 'modified', desc: 'Registration entry point changed from nav to hero CTA' },
+      { flowId: 'user-registration', type: 'modified', desc: 'Registration entry point changed from nav to hero CTA', changedStoryIndices: [0], changedStepIndices: [0] },
     ],
     diffs: [
       {
@@ -467,7 +467,7 @@ const VERSIONS = [
       { widgetId: 'navigation', type: 'modified', desc: 'Search bar integrated into nav' },
     ],
     flowChanges: [
-      { flowId: 'browse-catalog', type: 'modified', desc: 'Search step now starts from header instead of catalog page' },
+      { flowId: 'browse-catalog', type: 'modified', desc: 'Search step now starts from header instead of catalog page', changedStoryIndices: [2], changedStepIndices: [2] },
     ],
     diffs: [
       {
@@ -494,7 +494,7 @@ const VERSIONS = [
     ],
     flowChanges: [
       { flowId: 'request-tool-loan', type: 'modified', desc: 'New quick borrow shortcut from homepage' },
-      { flowId: 'browse-catalog', type: 'modified', desc: 'Featured tool card links directly to borrow modal' },
+      { flowId: 'browse-catalog', type: 'modified', desc: 'Featured tool card links directly to borrow modal', changedStoryIndices: [4], changedStepIndices: [3] },
     ],
     diffs: [
       {
@@ -519,7 +519,8 @@ const VERSIONS = [
     ],
     flowChanges: [
       { flowId: 'admin-manage-inventory', type: 'modified', desc: 'Admin access moved to account menu' },
-      { flowId: 'return-tool', type: 'modified', desc: 'Overdue alert banner replaces badge notification' },
+      { flowId: 'admin-approve', type: 'modified', desc: 'Admin access now via account menu instead of hero button', changedStoryIndices: [0], changedStepIndices: [0, 1] },
+      { flowId: 'return-tool', type: 'modified', desc: 'Overdue alert banner replaces badge notification', changedStoryIndices: [0], changedStepIndices: [0] },
     ],
     diffs: [
       {
@@ -542,6 +543,174 @@ const VERSIONS = [
     description: 'Redesigned overdue notifications + moved Admin Access button to account menu.',
   },
 ];
+
+// ─── FLOW CODE VERSION HISTORY ───
+// Maps flow ID to historical code snapshots for diff display between versions.
+// Each entry: { upToVersion: <versionIdx>, code: <string> }
+// Lookup: for version V, use the first entry where upToVersion >= V. Else use FLOWS[].code.
+const FLOW_CODE_HISTORY = {
+  'browse-catalog': [
+    { upToVersion: 1, code: `import { test, expect } from '@playwright/test';
+
+test.describe('Browse & Search Tool Catalog', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/catalog');
+  });
+
+  test('should display catalog with tools', async ({ page }) => {
+    const toolCards = page.locator('[data-testid="tool-card"]');
+    await expect(toolCards).toHaveCount({ minimum: 1 });
+  });
+
+  test('should filter by category', async ({ page }) => {
+    await page.click('[data-testid="filter-power-tools"]');
+
+    const toolCards = page.locator('[data-testid="tool-card"]');
+    for (const card of await toolCards.all()) {
+      await expect(card.locator('.tool-category'))
+        .toHaveText('Power Tools');
+    }
+  });
+
+  test('should search tools on catalog page', async ({ page }) => {
+    // Search bar is located on the catalog page
+    const searchSection = page.locator('.catalog-search-section');
+    await searchSection.locator('input[placeholder="Search tools..."]').fill('drill');
+    await page.waitForTimeout(300); // debounce
+
+    const results = page.locator('[data-testid="tool-card"]');
+    await expect(results.first()).toContainText(/drill/i);
+  });
+
+  test('should open tool detail page', async ({ page }) => {
+    await page.click('[data-testid="tool-card"]:first-child');
+
+    await expect(page.locator('h1.tool-title')).toBeVisible();
+    await expect(page.locator('.availability-badge')).toBeVisible();
+    await expect(page.locator('.tool-description')).not.toBeEmpty();
+  });
+});` }
+  ],
+  'user-registration': [
+    { upToVersion: 0, code: `import { test, expect } from '@playwright/test';
+import { generateTestEmail } from '../helpers/utils';
+
+test.describe('User Registration & Login', () => {
+  const testEmail = generateTestEmail();
+
+  test('should navigate to signup from nav button', async ({ page }) => {
+    await page.goto('/');
+    // Click "Sign Up Free" button in the navigation bar
+    await page.click('[data-testid="nav-signup-btn"]');
+    await expect(page).toHaveURL(/\\/signup/);
+    await expect(page.locator('form[data-testid="signup-form"]'))
+      .toBeVisible();
+  });
+
+  test('should validate email format', async ({ page }) => {
+    await page.goto('/signup');
+    await page.fill('[data-testid="email-input"]', 'invalid-email');
+    await page.click('[data-testid="signup-submit"]');
+
+    await expect(page.locator('.field-error'))
+      .toContainText('valid email');
+  });
+
+  test('should validate password strength', async ({ page }) => {
+    await page.goto('/signup');
+    await page.fill('[data-testid="password-input"]', '123');
+    await page.click('[data-testid="signup-submit"]');
+
+    await expect(page.locator('.password-strength'))
+      .toHaveClass(/weak/);
+  });
+
+  test('should register new user via nav signup', async ({ page }) => {
+    await page.goto('/');
+    await page.click('[data-testid="nav-signup-btn"]');
+
+    await page.fill('[data-testid="name-input"]', 'Test User');
+    await page.fill('[data-testid="email-input"]', testEmail);
+    await page.fill('[data-testid="password-input"]', 'SecureP@ss123');
+    await page.fill('[data-testid="confirm-password"]', 'SecureP@ss123');
+    await page.click('[data-testid="signup-submit"]');
+
+    await expect(page.locator('.verification-sent'))
+      .toContainText('Check your email');
+  });
+
+  test('should login after registration', async ({ page }) => {
+    await page.goto('/login');
+
+    await page.fill('[data-testid="email-input"]', testEmail);
+    await page.fill('[data-testid="password-input"]', 'SecureP@ss123');
+    await page.click('[data-testid="login-submit"]');
+
+    await expect(page).toHaveURL(/\\/dashboard/);
+    await expect(page.locator('.welcome-message'))
+      .toContainText('Welcome');
+  });
+});` }
+  ],
+  'admin-approve': [
+    { upToVersion: 3, code: `import { test, expect } from '@playwright/test';
+import { loginAsAdmin, createTestLoanRequest } from '../helpers/auth';
+
+test.describe('Admin Approve / Reject Loan', () => {
+  let requestId: string;
+
+  test.beforeAll(async () => {
+    requestId = await createTestLoanRequest();
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+    // Navigate to admin via hero button on homepage
+    await page.goto('/');
+    await page.click('[data-testid="hero-admin-btn"]');
+    await expect(page).toHaveURL(/\\/admin/);
+  });
+
+  test('should display pending requests', async ({ page }) => {
+    const pendingList = page.locator('[data-testid="pending-requests"]');
+    await expect(pendingList).toBeVisible();
+
+    const requests = pendingList.locator('.request-row');
+    await expect(requests).toHaveCount({ minimum: 1 });
+  });
+
+  test('should show request details', async ({ page }) => {
+    await page.click(\`[data-testid="request-\${requestId}"]\`);
+
+    await expect(page.locator('.request-detail')).toBeVisible();
+    await expect(page.locator('.requester-name')).not.toBeEmpty();
+    await expect(page.locator('.requested-tool')).not.toBeEmpty();
+    await expect(page.locator('.pickup-date')).not.toBeEmpty();
+  });
+
+  test('should approve request with note', async ({ page }) => {
+    await page.click(\`[data-testid="request-\${requestId}"]\`);
+    await page.fill('[data-testid="admin-note"]', 'Pickup after 3 PM');
+    await page.click('[data-testid="approve-btn"]');
+
+    await expect(page.locator('.toast-success'))
+      .toContainText('approved');
+    await expect(page.locator('.request-status'))
+      .toHaveText('Approved');
+  });
+
+  test('should reject request with reason', async ({ page }) => {
+    const rejectId = await createTestLoanRequest();
+    await page.click(\`[data-testid="request-\${rejectId}"]\`);
+    await page.fill('[data-testid="admin-note"]', 'Tool under maintenance');
+    await page.click('[data-testid="reject-btn"]');
+
+    await expect(page.locator('.request-status'))
+      .toHaveText('Rejected');
+  });
+});` }
+  ]
+};
 
 // ─── WIDGET LIBRARY ───
 const WIDGETS = [
@@ -788,6 +957,134 @@ const WIDGETS = [
         <button style="width:100%;background:${p.accentColor};color:#fff;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">${p.confirmLabel}</button>
       </div>`;
     }
+  },
+  {
+    id: 'listing-wizard',
+    name: 'Listing Wizard',
+    category: 'Components',
+    icon: '🧙',
+    description: 'Multi-step wizard modal for listing a new tool. Navigate between Details, Availability, Photos and Review steps using the in-preview buttons or the Step control.',
+    props: [
+      { name: 'step', type: 'select', default: 'Details', options: ['Details', 'Availability', 'Photos', 'Review'] },
+      { name: 'title', type: 'text', default: 'List Your Tool' },
+      { name: 'toolName', type: 'text', default: 'Cordless Drill Pro' },
+      { name: 'accentColor', type: 'color', default: '#7c3aed' },
+      { name: 'showProgress', type: 'boolean', default: true },
+    ],
+    render(p) {
+      const steps = ['Details', 'Availability', 'Photos', 'Review'];
+      const ci = Math.max(0, steps.indexOf(p.step));
+
+      /* ── Progress indicator ── */
+      const progressBar = p.showProgress ? `
+        <div style="display:flex;align-items:flex-start;margin-bottom:18px;position:relative">
+          <div style="position:absolute;top:11px;left:12%;right:12%;height:2px;background:#2a2a40"></div>
+          <div style="position:absolute;top:11px;left:12%;height:2px;background:${ci > 0 ? p.accentColor : 'transparent'};width:${(ci / (steps.length - 1)) * 76}%"></div>
+          ${steps.map((s, i) => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;z-index:1">
+              <div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;background:${i < ci ? '#22C55E' : i === ci ? p.accentColor : '#2a2a40'}">${i < ci ? '✓' : i + 1}</div>
+              <div style="font-size:8px;margin-top:4px;color:${i === ci ? '#fff' : '#555'};white-space:nowrap">${s}</div>
+            </div>
+          `).join('')}
+        </div>` : '';
+
+      /* ── Reusable inline styles ── */
+      const inputSt = 'width:100%;padding:8px 10px;border-radius:6px;border:1px solid #2a2a40;background:#1a1a2e;color:#ccc;font-size:11px;font-family:system-ui';
+      const labelSt = 'font-size:10px;color:#888;margin-bottom:4px;display:block';
+      const gap = 'margin-bottom:10px';
+
+      /* ── Step content ── */
+      let content;
+      if (ci === 0) {
+        content = `
+          <div style="${gap}"><label style="${labelSt}">Tool Name</label><input style="${inputSt}" value="${p.toolName}" readonly></div>
+          <div style="${gap}"><label style="${labelSt}">Category</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${['Power Tools', 'Hand Tools', 'Garden', 'Safety'].map((c, i) =>
+                `<span style="padding:5px 10px;border-radius:14px;font-size:10px;cursor:pointer;${i === 0 ? `background:${p.accentColor};color:#fff` : 'background:#1e1e33;color:#888'}">${c}</span>`
+              ).join('')}
+            </div>
+          </div>
+          <div><label style="${labelSt}">Condition</label>
+            <div style="display:flex;gap:6px">
+              ${['New', 'Like New', 'Good', 'Fair'].map((c, i) =>
+                `<span style="padding:5px 10px;border-radius:14px;font-size:10px;cursor:pointer;${i === 1 ? `background:${p.accentColor}33;color:${p.accentColor};border:1px solid ${p.accentColor}` : 'background:#1e1e33;color:#888;border:1px solid transparent'}">${c}</span>`
+              ).join('')}
+            </div>
+          </div>`;
+      } else if (ci === 1) {
+        content = `
+          <div style="display:flex;gap:8px;${gap}">
+            <div style="flex:1"><label style="${labelSt}">Available From</label><input type="text" style="${inputSt}" value="Feb 10, 2026" readonly></div>
+            <div style="flex:1"><label style="${labelSt}">Until</label><input type="text" style="${inputSt}" value="Mar 15, 2026" readonly></div>
+          </div>
+          <div style="${gap}"><label style="${labelSt}">Rental Price (per day)</label><input style="${inputSt}" value="$12.00" readonly></div>
+          <div style="${gap}"><label style="${labelSt}">Security Deposit</label><input style="${inputSt}" value="$50.00" readonly></div>
+          <div style="background:#1a1a2e;border-radius:8px;padding:10px;border:1px solid #2a2a40">
+            <div style="font-size:10px;color:#888;margin-bottom:4px">Pickup Location</div>
+            <div style="font-size:11px;color:#ccc">📍 Community Center — 123 Main St</div>
+          </div>`;
+      } else if (ci === 2) {
+        content = `
+          <div style="border:2px dashed #2a2a40;border-radius:10px;padding:20px;text-align:center;${gap}">
+            <div style="font-size:24px;margin-bottom:6px">📷</div>
+            <div style="font-size:11px;color:#888;margin-bottom:4px">Drag photos here or click to upload</div>
+            <div style="font-size:9px;color:#555">JPG, PNG up to 5MB each</div>
+          </div>
+          <div style="display:flex;gap:6px;${gap}">
+            <div style="width:48px;height:48px;border-radius:6px;background:#1e1e33;display:flex;align-items:center;justify-content:center;font-size:18px">🔧</div>
+            <div style="width:48px;height:48px;border-radius:6px;background:#1e1e33;display:flex;align-items:center;justify-content:center;font-size:18px">📦</div>
+            <div style="width:48px;height:48px;border-radius:6px;background:#1e1e33;border:1px dashed #2a2a40;display:flex;align-items:center;justify-content:center;font-size:14px;color:#555">+</div>
+          </div>
+          <div><label style="${labelSt}">Description</label>
+            <div style="${inputSt};min-height:48px;line-height:1.5">Professional-grade cordless drill with two batteries and carrying case. Well maintained.</div>
+          </div>`;
+      } else {
+        content = `
+          <div style="background:#1a1a2e;border-radius:8px;padding:12px;border:1px solid #2a2a40;${gap}">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;font-weight:700;color:#fff">${p.toolName}</span>
+              <span style="font-size:10px;color:#22C55E;background:#22C55E22;padding:2px 8px;border-radius:10px">Ready</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:10px">
+              <div><span style="color:#666">Category:</span> <span style="color:#ccc">Power Tools</span></div>
+              <div><span style="color:#666">Condition:</span> <span style="color:#ccc">Like New</span></div>
+              <div><span style="color:#666">Price:</span> <span style="color:#ccc">$12.00/day</span></div>
+              <div><span style="color:#666">Deposit:</span> <span style="color:#ccc">$50.00</span></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;background:${p.accentColor}15;border:1px solid ${p.accentColor}33;border-radius:8px;padding:10px">
+            <input type="checkbox" checked style="margin-top:2px;accent-color:${p.accentColor}">
+            <span style="font-size:10px;color:#999;line-height:1.4">I confirm this tool is in working condition and available for the listed dates.</span>
+          </div>`;
+      }
+
+      /* ── Navigation buttons ── */
+      const prevStep = ci > 0 ? steps[ci - 1] : null;
+      const nextStep = ci < steps.length - 1 ? steps[ci + 1] : null;
+      const btnBase = 'padding:7px 14px;border-radius:6px;font-size:11px;cursor:pointer;font-family:system-ui';
+      const nav = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid #2a2a40">
+          ${prevStep
+            ? `<button onclick="wizardGoToStep('${prevStep}')" style="background:transparent;color:#999;border:1px solid #2a2a40;${btnBase}">← Back</button>`
+            : '<div></div>'}
+          <div style="font-size:10px;color:#555">${ci + 1} of ${steps.length}</div>
+          ${nextStep
+            ? `<button onclick="wizardGoToStep('${nextStep}')" style="background:${p.accentColor};color:#fff;border:none;font-weight:600;${btnBase}">Next →</button>`
+            : `<button style="background:#22C55E;color:#fff;border:none;font-weight:600;${btnBase}">Submit ✓</button>`}
+        </div>`;
+
+      return `<div style="background:#12121e;border-radius:12px;padding:20px;font-family:system-ui;border:1px solid #2a2a40;max-width:300px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-weight:700;color:#fff;font-size:14px">🧙 ${p.title}</div>
+          <span style="color:#666;cursor:pointer;font-size:16px">✕</span>
+        </div>
+        ${progressBar}
+        <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:12px">${steps[ci]}</div>
+        ${content}
+        ${nav}
+      </div>`;
+    }
   }
 ];
 
@@ -860,8 +1157,8 @@ function buildChatPanel() {
   const messages = [
     { type: 'step', title: 'Generating your site', time: 'Today, 10:33 AM', done: true },
     { type: 'msg', text: `I've built a complete Community Tool Library application with all the requested features. The app includes a public catalog with search and filtering, a loan request system with custom validation rules, and a comprehensive admin dashboard for managing inventory and loans.` },
-    { type: 'step', title: 'Detecting product flows', time: 'Today, 10:34 AM', done: true },
-    { type: 'msg', html: `I've detected <strong style="color:#fff">6 product flows</strong> from your prompt and the generated code architecture. Each flow has an auto-generated E2E test you can run, visualize, and inspect.<br><br><span class="new-feature-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Product Flows page is ready</span>` },
+    { type: 'step', title: 'Building trust layer', time: 'Today, 10:34 AM', done: true },
+    { type: 'msg', html: `I've analyzed your prompt and generated code to build the <strong style="color:#fff">Insights</strong> layer:<br><br>• <strong style="color:#fff">User Flows</strong> — interactive site map with navigation paths<br>• <strong style="color:#fff">Widget Library</strong> — ${WIDGETS.length} detected UI components with live preview<br>• <strong style="color:#fff">User Stories</strong> — ${FLOWS.length} curated flows with auto-generated E2E tests<br><br><span class="new-feature-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Insights page is ready</span>` },
   ];
 
   let delay = 0;

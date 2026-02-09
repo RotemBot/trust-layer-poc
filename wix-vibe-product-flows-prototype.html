@@ -64,8 +64,10 @@
     <div class="gen-step-item" data-step="2"><span class="dot"></span>Generating components &amp; layouts</div>
     <div class="gen-step-item" data-step="3"><span class="dot"></span>Setting up data collections</div>
     <div class="gen-step-item" data-step="4"><span class="dot"></span>Writing business logic</div>
-    <div class="gen-step-item highlight" data-step="5"><span class="dot"></span>Detecting product flows &amp; generating E2E tests ✨</div>
-    <div class="gen-step-item" data-step="6"><span class="dot"></span>Finalizing &amp; optimizing</div>
+    <div class="gen-step-item" data-step="5"><span class="dot"></span>Mapping user flows &amp; site navigation</div>
+    <div class="gen-step-item" data-step="6"><span class="dot"></span>Detecting widgets &amp; UI components</div>
+    <div class="gen-step-item" data-step="7"><span class="dot"></span>Generating user stories &amp; E2E tests</div>
+    <div class="gen-step-item" data-step="8"><span class="dot"></span>Finalizing &amp; optimizing</div>
   </div>
 </div>
 
@@ -552,11 +554,11 @@
           <span id="vcDateText" style="color:var(--text-muted);font-weight:400">· latest</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
-        <div class="vc-timeline" id="vcTimeline"></div>
-        <div class="vc-diff-count" id="vcDiffCount" style="display:none">0 changes</div>
         <div class="vc-nav">
           <button class="vc-nav-btn" onclick="vcNext()" id="vcNextBtn" disabled>▶</button>
         </div>
+        <div class="vc-timeline" id="vcTimeline"></div>
+        <div class="vc-diff-count" id="vcDiffCount" style="display:none">0 changes</div>
       </div>
 
       <!-- Flows Panel (default active) -->
@@ -663,7 +665,7 @@
   </div>
 </div>
 
-<!-- ═══════ CODE MODAL ═══════ -->
+<!-- ═══════ CODE MODAL (Split View) ═══════ -->
 <div class="modal-overlay" id="codeModal">
   <div class="code-modal">
     <div class="code-header">
@@ -671,9 +673,32 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
         <span id="codeFilePath">tests/flows/browse-catalog.spec.ts</span>
       </div>
+      <div class="code-modal-vc">
+        <button class="code-vc-nav" id="codeVcPrev" onclick="codeModalVcPrev()" disabled>◀</button>
+        <div class="code-vc-label">
+          <span class="vc-hash">#</span><span id="codeVcHash">4a3f2c1</span>
+          <span id="codeVcDate" style="color:var(--text-muted);font-weight:400">· latest</span>
+        </div>
+        <button class="code-vc-nav" id="codeVcNext" onclick="codeModalVcNext()" disabled>▶</button>
+        <button class="code-diff-toggle" id="codeDiffToggle" onclick="toggleCodeDiff()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="3" width="8" height="15" rx="1"/><rect x="14" y="6" width="8" height="15" rx="1"/></svg>
+          <span id="codeDiffLabel">Show Changes</span>
+        </button>
+      </div>
       <button class="vis-close" onclick="closeModal('codeModal')">✕</button>
     </div>
-    <div class="code-body" id="codeBody"></div>
+    <div class="code-split-body">
+      <div class="code-story-pane" id="codeStoryPane"></div>
+      <div class="code-right-pane" id="codeRightPane"></div>
+    </div>
+    <div class="code-modal-footer">
+      <div class="code-regen-context" id="codeRegenContext"></div>
+      <button class="code-regen-btn" id="codeRegenBtn" onclick="regenerateCode()">
+        <svg class="regen-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+        <span class="regen-label">Regenerate Test Code</span>
+        <svg class="regen-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 

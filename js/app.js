@@ -413,12 +413,291 @@ function visPrev() {
   }
 }
 
-// ─── CODE MODAL ───
+// ─── CODE MODAL (Split View + Version Control + Diff) ───
+let codeModalFlowIdx = null;
+let codeModalVersionIdx = currentVersionIdx;
+let codeModalDiffActive = false;
+
+function getFlowCodeForVersion(flowId, versionIdx) {
+  const history = FLOW_CODE_HISTORY[flowId];
+  if (history) {
+    for (const entry of history) {
+      if (versionIdx <= entry.upToVersion) return entry.code;
+    }
+  }
+  const flow = FLOWS.find(f => f.id === flowId);
+  return flow ? flow.code : '';
+}
+
+function hasCodeChangedAtVersion(flowId, versionIdx) {
+  if (versionIdx === 0) return false;
+  return getFlowCodeForVersion(flowId, versionIdx) !== getFlowCodeForVersion(flowId, versionIdx - 1);
+}
+
 function openCode(idx) {
+  codeModalFlowIdx = idx;
+  codeModalVersionIdx = currentVersionIdx;
+  codeModalDiffActive = false;
+
   const flow = FLOWS[idx];
   document.getElementById('codeFilePath').textContent = `tests/flows/${flow.id}.spec.ts`;
-  document.getElementById('codeBody').innerHTML = `<div class="code-block">${highlightTS(flow.code)}</div>`;
+
+  renderCodeModalContent();
+  updateCodeModalVcUI();
+
+  // Footer context
+  const contextEl = document.getElementById('codeRegenContext');
+  if (flow.story) {
+    contextEl.innerHTML = `<span class="regen-context-label">Source:</span> BDD story (${flow.story.length} steps) + current implementation`;
+  } else {
+    contextEl.innerHTML = `<span class="regen-context-label">Source:</span> Flow definition + current implementation`;
+  }
+
+  // Reset regenerate button
+  const btn = document.getElementById('codeRegenBtn');
+  btn.classList.remove('regenerating', 'done');
+  btn.disabled = false;
+  btn.querySelector('.regen-label').textContent = 'Regenerate Test Code';
+
   document.getElementById('codeModal').classList.add('active');
+}
+
+function renderCodeModalContent() {
+  const flow = FLOWS[codeModalFlowIdx];
+  const storyPane = document.getElementById('codeStoryPane');
+  const rightPane = document.getElementById('codeRightPane');
+
+  // Resolve flow change metadata for highlighting
+  let flowChange = null;
+  if (codeModalDiffActive && hasCodeChangedAtVersion(flow.id, codeModalVersionIdx)) {
+    const v = VERSIONS[codeModalVersionIdx];
+    flowChange = (v.flowChanges || []).find(fc => fc.flowId === flow.id);
+  }
+  const changedStorySet = new Set(flowChange?.changedStoryIndices || []);
+  const changedStepSet = new Set(flowChange?.changedStepIndices || []);
+
+  let storyHtml = '';
+
+  // ── Change info block (above User Story when diff is active) ──
+  if (flowChange) {
+    const v = VERSIONS[codeModalVersionIdx];
+    storyHtml += `<div class="code-change-info">
+      <h4>Changes in this version</h4>
+      <div class="code-change-desc">${flowChange.desc}</div>
+      <div class="code-change-version">${v.label} · ${v.date}</div>
+    </div>`;
+  }
+
+  // ── BDD Story ──
+  storyHtml += '<div class="code-story-header"><h4>User Story</h4></div>';
+  if (flow.story) {
+    storyHtml += '<div class="story-block" style="margin-bottom:20px">';
+    storyHtml += flow.story.map((s, i) => {
+      const hl = changedStorySet.has(i) ? ' story-step-changed' : '';
+      return `<div class="story-step${hl}"><span class="story-keyword story-kw-${s.keyword.toLowerCase()}">${s.keyword}</span> ${s.text}</div>`;
+    }).join('');
+    storyHtml += '</div>';
+  }
+
+  // ── Test Steps ──
+  storyHtml += '<div class="code-story-header"><h4>Test Steps</h4></div>';
+  storyHtml += '<div class="code-test-steps">';
+  flow.steps.forEach((step, i) => {
+    const hl = changedStepSet.has(i) ? ' code-test-step-changed' : '';
+    storyHtml += `<div class="code-test-step${hl}">
+      <span class="code-step-num">${i + 1}</span>
+      <div>
+        <div class="code-step-action">${step.action}</div>
+        <div class="code-step-detail">${step.detail}</div>
+      </div>
+    </div>`;
+  });
+  storyHtml += '</div>';
+
+  storyPane.innerHTML = storyHtml;
+
+  // ── Right pane: Code or Diff ──
+  if (codeModalDiffActive && codeModalVersionIdx > 0) {
+    const oldCode = getFlowCodeForVersion(flow.id, codeModalVersionIdx - 1);
+    const newCode = getFlowCodeForVersion(flow.id, codeModalVersionIdx);
+    const diff = computeLineDiff(oldCode, newCode);
+    rightPane.innerHTML = renderDiffView(diff);
+  } else {
+    const code = getFlowCodeForVersion(flow.id, codeModalVersionIdx);
+    rightPane.innerHTML = `<div class="code-block">${highlightTS(code)}</div>`;
+  }
+}
+
+function updateCodeModalVcUI() {
+  const v = VERSIONS[codeModalVersionIdx];
+  document.getElementById('codeVcHash').textContent = v.hash;
+  document.getElementById('codeVcDate').textContent =
+    codeModalVersionIdx === VERSIONS.length - 1 ? '· latest' : '· ' + v.date;
+  document.getElementById('codeVcPrev').disabled = codeModalVersionIdx === 0;
+  document.getElementById('codeVcNext').disabled = codeModalVersionIdx === VERSIONS.length - 1;
+
+  // Show/hide diff toggle based on whether code actually changed at this version
+  const flow = FLOWS[codeModalFlowIdx];
+  const hasChanges = hasCodeChangedAtVersion(flow.id, codeModalVersionIdx);
+  const diffToggle = document.getElementById('codeDiffToggle');
+  diffToggle.style.display = hasChanges ? '' : 'none';
+  diffToggle.classList.toggle('active', codeModalDiffActive && hasChanges);
+  document.getElementById('codeDiffLabel').textContent =
+    codeModalDiffActive && hasChanges ? 'Showing Changes' : 'Show Changes';
+}
+
+function codeModalVcPrev() {
+  if (codeModalVersionIdx > 0) {
+    codeModalVersionIdx--;
+    codeModalDiffActive = false;
+    renderCodeModalContent();
+    updateCodeModalVcUI();
+  }
+}
+
+function codeModalVcNext() {
+  if (codeModalVersionIdx < VERSIONS.length - 1) {
+    codeModalVersionIdx++;
+    codeModalDiffActive = false;
+    renderCodeModalContent();
+    updateCodeModalVcUI();
+  }
+}
+
+function toggleCodeDiff() {
+  codeModalDiffActive = !codeModalDiffActive;
+  renderCodeModalContent();
+  updateCodeModalVcUI();
+}
+
+// ─── LINE DIFF (LCS-based) ───
+function computeLineDiff(oldCode, newCode) {
+  const oldLines = oldCode.split('\n');
+  const newLines = newCode.split('\n');
+  const n = oldLines.length;
+  const m = newLines.length;
+
+  // Build LCS table
+  const dp = [];
+  for (let i = 0; i <= n; i++) {
+    dp[i] = new Array(m + 1).fill(0);
+  }
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      if (oldLines[i - 1] === newLines[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  // Backtrack to produce diff entries
+  const result = [];
+  let i = n, j = m;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && oldLines[i - 1] === newLines[j - 1]) {
+      result.unshift({ type: 'context', content: oldLines[i - 1], oldNum: i, newNum: j });
+      i--; j--;
+    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+      result.unshift({ type: 'added', content: newLines[j - 1], newNum: j });
+      j--;
+    } else {
+      result.unshift({ type: 'removed', content: oldLines[i - 1], oldNum: i });
+      i--;
+    }
+  }
+
+  return result;
+}
+
+function renderDiffView(diff) {
+  const addedCount = diff.filter(d => d.type === 'added').length;
+  const removedCount = diff.filter(d => d.type === 'removed').length;
+
+  let html = `<div class="diff-summary">
+    <span class="diff-stat-added">+${addedCount} added</span>
+    <span class="diff-stat-removed">\u2212${removedCount} removed</span>
+  </div>`;
+
+  html += '<div class="diff-view">';
+  diff.forEach(entry => {
+    const cls = entry.type === 'added' ? 'diff-added' : entry.type === 'removed' ? 'diff-removed' : '';
+    const marker = entry.type === 'added' ? '+' : entry.type === 'removed' ? '\u2212' : ' ';
+    const oldNum = entry.oldNum != null ? entry.oldNum : '';
+    const newNum = entry.newNum != null ? entry.newNum : '';
+    const highlighted = highlightTSLine(entry.content);
+
+    html += `<div class="diff-line ${cls}">`;
+    html += `<span class="diff-num">${oldNum}</span>`;
+    html += `<span class="diff-num">${newNum}</span>`;
+    html += `<span class="diff-marker">${marker}</span>`;
+    html += `<span class="diff-content">${highlighted}</span>`;
+    html += '</div>';
+  });
+  html += '</div>';
+
+  return html;
+}
+
+// Highlight a single TS line (for diff view, without wrapping in .code-line)
+function highlightTSLine(line) {
+  let hl = escapeHtml(line);
+  hl = hl.replace(/\b(import|from|export|const|let|var|async|await|function|return|if|else|for|of|new|test|expect)\b/g, '<span class="hl-kw">$1</span>');
+  hl = hl.replace(/(&#x27;[^&#]*?&#x27;|'[^']*?')/g, '<span class="hl-str">$1</span>');
+  hl = hl.replace(/(`[^`]*?`)/g, '<span class="hl-str">$1</span>');
+  hl = hl.replace(/(\/\/.*)/g, '<span class="hl-cm">$1</span>');
+  hl = hl.replace(/\b(\d+)\b/g, '<span class="hl-num">$1</span>');
+  hl = hl.replace(/\.(\w+)\(/g, '.<span class="hl-fn">$1</span>(');
+  hl = hl.replace(/test\.describe/g, '<span class="hl-kw">test</span>.<span class="hl-fn">describe</span>');
+  return hl;
+}
+
+function regenerateCode() {
+  if (codeModalFlowIdx === null) return;
+  const btn = document.getElementById('codeRegenBtn');
+  if (btn.classList.contains('regenerating')) return;
+
+  // Switch to latest version, turn off diff
+  codeModalVersionIdx = VERSIONS.length - 1;
+  codeModalDiffActive = false;
+  updateCodeModalVcUI();
+  renderCodeModalContent();
+
+  btn.classList.add('regenerating');
+  btn.disabled = true;
+  btn.querySelector('.regen-label').textContent = 'Analyzing BDD story...';
+
+  const rightPane = document.getElementById('codeRightPane');
+
+  // Phase 1
+  setTimeout(() => {
+    btn.querySelector('.regen-label').textContent = 'Mapping to implementation...';
+  }, 800);
+
+  // Phase 2: shimmer
+  setTimeout(() => {
+    btn.querySelector('.regen-label').textContent = 'Generating Playwright code...';
+    rightPane.querySelectorAll('.code-line').forEach((line, i) => {
+      setTimeout(() => line.classList.add('code-line-regen'), i * 30);
+    });
+  }, 1600);
+
+  // Phase 3: done
+  setTimeout(() => {
+    const flow = FLOWS[codeModalFlowIdx];
+    rightPane.innerHTML = `<div class="code-block code-block-fresh">${highlightTS(flow.code)}</div>`;
+
+    btn.classList.remove('regenerating');
+    btn.classList.add('done');
+    btn.querySelector('.regen-label').textContent = 'Code regenerated';
+
+    setTimeout(() => {
+      btn.classList.remove('done');
+      btn.disabled = false;
+      btn.querySelector('.regen-label').textContent = 'Regenerate Test Code';
+    }, 2000);
+  }, 2800);
 }
 
 function highlightTS(code) {
@@ -1334,6 +1613,15 @@ function closeWidgetDetail() {
   if (detail) detail.style.display = 'none';
 }
 
+function wizardGoToStep(stepValue) {
+  const widget = WIDGETS[currentWidgetIdx];
+  if (!widget) return;
+  const stepPropIdx = widget.props.findIndex(pr => pr.name === 'step');
+  if (stepPropIdx < 0) return;
+  const sel = document.querySelector(`[data-prop="${stepPropIdx}"]`);
+  if (sel) { sel.value = stepValue; updateWidgetPreview(); }
+}
+
 function filterWidgets(category, btn) {
   // Update active state
   document.querySelectorAll('.widget-cat-btn').forEach(b => b.classList.remove('active'));
@@ -1366,6 +1654,10 @@ window.openVisualize = openVisualize;
 window.visNext = visNext;
 window.visPrev = visPrev;
 window.openCode = openCode;
+window.regenerateCode = regenerateCode;
+window.codeModalVcPrev = codeModalVcPrev;
+window.codeModalVcNext = codeModalVcNext;
+window.toggleCodeDiff = toggleCodeDiff;
 window.closeModal = closeModal;
 window.goToVersion = goToVersion;
 window.vcPrev = vcPrev;
